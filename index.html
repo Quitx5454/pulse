@@ -558,6 +558,7 @@ body::before{
     </div>
     <div class="rp-divider"></div>
     <div id="rp-endpoints"></div>
+    <div id="rp-transactions"></div>
     <a class="invoke-btn" id="rp-invoke" href="#" target="_blank">Invoke →</a>
   </div>
 </div>
@@ -632,6 +633,8 @@ const MOCK_ACTIVITY = [
 let nodes = [];
 let edges = [];
 let agentMap = {};
+let agentFeedbacks = {};   // { agentId: [tx, ...] }
+let allFeedbacks  = [];
 let selectedNode = null;
 
 // SWR cache
@@ -702,100 +705,181 @@ function buildAgentNodes(rawAgents) {
   return nodeList;
 }
 
-function buildEdges(nodeList) {
-  const edgeList = [];
-  const n = nodeList.length;
-  // Create sparse random edges + connections to our agents
-  for (let i = 0; i < Math.min(n * 2, 40); i++) {
-    const from = Math.floor(Math.random() * n);
-    let to = Math.floor(Math.random() * n);
-    if (to === from) to = (from + 1) % n;
-    edgeList.push({ from, to, weight: Math.random() });
-  }
-  // Always connect our agents to a few others
+function buildEdgesFromFeedbacks(nodeList, feedbacks) {
+  const edgeMap = {};   // "i-j" → { from, to, weight, txs }
+
+  // Build lookup: id/name → index
+  const idxById   = {}, idxByName = {};
+  nodeList.forEach((n, i) => {
+    if (n.id)   idxById[String(n.id).toLowerCase()]   = i;
+    if (n.name) idxByName[n.name.toLowerCase()] = i;
+    if (n.host) idxById[n.host.toLowerCase()]   = i;
+  });
+
+  const resolve = (val) => {
+    if (!val) return undefined;
+    const v = String(val).toLowerCase();
+    return idxById[v] ?? idxByName[v];
+  };
+
+  feedbacks.forEach(fb => {
+    // try all common field names for from/to agent
+    const fromVal = fb.from_agent || fb.from_agent_id || fb.caller || fb.caller_id ||
+                    fb.sender || fb.source_agent || fb.requester;
+    const toVal   = fb.to_agent   || fb.to_agent_id   || fb.agent || fb.agent_id  ||
+                    fb.service_id || fb.target_agent   || fb.recipient;
+
+    const fi = resolve(fromVal), ti = resolve(toVal);
+    if (fi === undefined || ti === undefined || fi === ti) return;
+
+    const key = `${Math.min(fi,ti)}-${Math.max(fi,ti)}`;
+    if (!edgeMap[key]) edgeMap[key] = { from: fi, to: ti, weight: 0, txs: [] };
+    edgeMap[key].weight += 0.1;
+    edgeMap[key].txs.push(fb);
+  });
+
+  // Normalise weights to 0..1
+  const edgeList = Object.values(edgeMap);
+  const maxW = edgeList.reduce((m, e) => Math.max(m, e.weight), 1);
+  edgeList.forEach(e => { e.weight = Math.min(e.weight / maxW, 1); });
+
+  // If no real edges found for our agents, wire them minimally
   [0, 1].forEach(ourIdx => {
-    for (let k = 0; k < 4; k++) {
-      const target = 2 + Math.floor(Math.random() * (n - 2));
-      edgeList.push({ from: ourIdx, to: target, weight: 0.8 });
+    const hasEdge = edgeList.some(e => e.from === ourIdx || e.to === ourIdx);
+    if (!hasEdge && nodeList.length > 2) {
+      for (let k = 0; k < 3; k++) {
+        const t = 2 + Math.floor(Math.random() * (nodeList.length - 2));
+        edgeList.push({ from: ourIdx, to: t, weight: 0.6, txs: [], synthetic: true });
+      }
     }
   });
+
   return edgeList;
 }
 
 function extractAgentArray(data) {
   if (!data) return null;
   if (Array.isArray(data)) return data.length ? data : null;
-  // try common wrapper keys
-  for (const key of ['agents','services','data','results','items','list']) {
+  for (const key of ['agents','services','data','results','items','list','records']) {
     if (Array.isArray(data[key]) && data[key].length) return data[key];
   }
   return null;
 }
 
-async function loadData() {
-  setLoadingStatus('Fetching agent services...', 10);
+function extractTotal(raw, arr) {
+  if (!raw || typeof raw !== 'object') return arr ? arr.length : 0;
+  // Flat keys
+  for (const k of ['total','count','totalCount','total_count','totalAgents','total_agents','size']) {
+    if (typeof raw[k] === 'number') return raw[k];
+  }
+  // Nested: meta.total, pagination.total, etc.
+  for (const wrapper of ['meta','pagination','page','info']) {
+    if (raw[wrapper] && typeof raw[wrapper] === 'object') {
+      for (const k of ['total','count','totalCount','total_count']) {
+        if (typeof raw[wrapper][k] === 'number') return raw[wrapper][k];
+      }
+    }
+  }
+  return arr ? arr.length : 0;
+}
 
-  // Step 1: xgate — try both /agents and /services
-  let xgateAgents = null;
-  let xgateTotalCount = 0;
+function indexFeedbacksByAgent(fbs, nodeList) {
+  const map = {};
+  nodeList.forEach(n => { map[n.id] = []; });
+
+  fbs.forEach(fb => {
+    const agentId = fb.agent_id || fb.to_agent || fb.to_agent_id || fb.service_id;
+    if (agentId && map[agentId]) map[agentId].push(fb);
+    const callerId = fb.from_agent || fb.from_agent_id || fb.caller_id;
+    if (callerId && map[callerId]) map[callerId].push(fb);
+  });
+  return map;
+}
+
+async function loadData() {
+  setLoadingStatus('Fetching agent services...', 8);
+
+  // xgate: try /agents then /services
+  let xgateRaw = null, xgateArr = null, xgateTotal = 0;
   for (const ep of ['https://api.xgate.run/agents', 'https://api.xgate.run/services']) {
-    const xg = await fetchWithCache(ep);
-    const arr = extractAgentArray(xg);
-    if (arr) {
-      xgateAgents = arr;
-      // grab total count from wrapper if present
-      xgateTotalCount = (xg && (xg.total || xg.count || xg.totalCount)) || arr.length;
-      console.log('[xgate]', ep, '→', arr.length, 'agents, total:', xgateTotalCount);
+    xgateRaw = await fetchWithCache(ep);
+    xgateArr = extractAgentArray(xgateRaw);
+    if (xgateArr) {
+      xgateTotal = extractTotal(xgateRaw, xgateArr);
+      console.log('[xgate]', ep, '→', xgateArr.length, '/ total:', xgateTotal, '| keys:', Object.keys(xgateRaw||{}));
       break;
+    } else {
+      console.log('[xgate]', ep, '→ no array, raw:', xgateRaw);
     }
   }
 
-  setLoadingStatus('Fetching network stats...', 30);
+  setLoadingStatus('Fetching stats...', 22);
+  const statsRaw = await fetchWithCache('https://8004scan.io/api/v1/public/stats');
+  const stats = (statsRaw && typeof statsRaw === 'object') ? statsRaw : null;
 
-  // Step 2: 8004scan stats
-  let stats = null;
-  const s = await fetchWithCache('https://8004scan.io/api/v1/public/stats');
-  if (s && typeof s === 'object') stats = s;
+  setLoadingStatus('Loading agent profiles...', 38);
+  const agentsRaw = await fetchWithCache('https://8004scan.io/api/v1/public/agents');
+  const scanArr   = extractAgentArray(agentsRaw);
+  const scanTotal = extractTotal(agentsRaw, scanArr);
+  if (scanArr) console.log('[8004scan] agents →', scanArr.length, '/ total:', scanTotal);
 
-  setLoadingStatus('Loading agent profiles...', 50);
+  setLoadingStatus('Fetching transactions...', 55);
+  const fbRaw = await fetchWithCache('https://8004scan.io/api/v1/public/feedbacks');
+  const fbArr = extractAgentArray(fbRaw) || [];
+  console.log('[8004scan] feedbacks →', fbArr.length);
 
-  // Step 3: 8004scan agents (supplement if xgate gave few results)
-  let scanAgents = null;
-  if (!xgateAgents || xgateAgents.length < 5) {
-    const a = await fetchWithCache('https://8004scan.io/api/v1/public/agents');
-    scanAgents = extractAgentArray(a);
-    if (scanAgents) console.log('[8004scan] agents →', scanAgents.length);
-  }
+  setLoadingStatus('Building network graph...', 72);
 
-  setLoadingStatus('Building network graph...', 70);
-
-  // Pick best source — merge xgate + scan if both available
+  // Best agent source: merge xgate + scan, deduplicate by id
   let rawAgents = MOCK_AGENTS;
-  if (xgateAgents && xgateAgents.length >= 3) {
-    rawAgents = scanAgents
-      ? [...xgateAgents, ...scanAgents.filter(sa => !xgateAgents.find(xa => xa.id === sa.id))]
-      : xgateAgents;
-  } else if (scanAgents && scanAgents.length >= 3) {
-    rawAgents = scanAgents;
+  if (xgateArr && xgateArr.length >= 2) {
+    rawAgents = scanArr
+      ? [...xgateArr, ...scanArr.filter(sa => !xgateArr.find(xa => String(xa.id) === String(sa.id)))]
+      : xgateArr;
+  } else if (scanArr && scanArr.length >= 2) {
+    rawAgents = scanArr;
   }
 
   nodes = buildAgentNodes(rawAgents);
-  edges = buildEdges(nodes);
   nodes.forEach(n => { agentMap[n.id] = n; });
 
-  // Stats: prefer live data, fall back to node count
-  const liveTotal = xgateTotalCount || (stats && (stats.totalAgents || stats.total_agents || stats.total)) || nodes.length;
-  const liveActive = (stats && (stats.activeNow || stats.active_now || stats.active)) || Math.round(liveTotal * 0.38);
+  // Real edges from feedback transactions
+  allFeedbacks   = fbArr;
+  agentFeedbacks = indexFeedbacksByAgent(fbArr, nodes);
+  edges          = buildEdgesFromFeedbacks(nodes, fbArr);
+
+  // Determine displayed stats
+  const liveTotal =
+    xgateTotal > nodes.length ? xgateTotal :
+    scanTotal  > nodes.length ? scanTotal  :
+    (stats && extractTotal(stats, null)) || nodes.length;
+
+  const liveActive = (stats && (stats.activeNow || stats.active_now || stats.active ||
+    stats.active_agents || stats.activeAgents)) || Math.round(liveTotal * 0.36);
+
+  const liveTxns = (stats && (stats.transactions || stats.total_transactions ||
+    stats.totalTransactions || stats.txCount)) || fbArr.length || MOCK_STATS.transactions;
+
   updateStats({
     totalAgents: liveTotal,
     activeNow: liveActive,
-    volume: (stats && (stats.volume || stats.totalVolume)) || MOCK_STATS.volume,
-    transactions: (stats && (stats.transactions || stats.totalTransactions)) || MOCK_STATS.transactions
+    volume: (stats && (stats.volume || stats.totalVolume || stats.total_volume)) || MOCK_STATS.volume,
+    transactions: liveTxns
   });
 
-  setLoadingStatus('Rendering 3D graph...', 85);
+  setLoadingStatus('Rendering 3D graph...', 88);
   updateTopAgents();
-  updateActivity(MOCK_ACTIVITY);
+  // Build activity from real feedbacks if available
+  if (fbArr.length) {
+    const items = fbArr.slice(0, 5).map(f => ({
+      time: timeAgo(f.timestamp || f.created_at || f.createdAt),
+      text: f.message || f.comment || f.text ||
+            `${f.from_agent || f.caller || '?'} → ${f.to_agent || f.agent_id || '?'}`
+    }));
+    updateActivity(items);
+  } else {
+    updateActivity(MOCK_ACTIVITY);
+  }
 
   return { nodes, edges };
 }
@@ -845,7 +929,7 @@ function openRightPanel(node) {
   document.getElementById('rp-rep').textContent = (node.reputation || '?') + '/100';
 
   const hEl = document.getElementById('rp-health');
-  hEl.textContent = node.isOurs ? 'Online' : (Math.random() > 0.2 ? 'Online' : 'Unknown');
+  hEl.textContent = node.isOurs ? 'Online' : (Math.random() > 0.15 ? 'Online' : 'Unknown');
   hEl.className = 'rp-field-value health-online';
 
   // Endpoints
@@ -862,6 +946,43 @@ function openRightPanel(node) {
     `).join('');
   } else {
     epEl.innerHTML = '';
+  }
+
+  // Transaction history for this node
+  const txEl = document.getElementById('rp-transactions');
+  const nodeTxs = (agentFeedbacks[node.id] || []).slice(0, 8);
+  // Also look for edges involving this node
+  const nodeIdx = nodes.indexOf(node);
+  const connectedEdges = edges.filter(e =>
+    (e.from === nodeIdx || e.to === nodeIdx) && e.txs && e.txs.length
+  );
+  const edgeTxs = connectedEdges.flatMap(e => e.txs).slice(0, 8);
+  const txList = nodeTxs.length ? nodeTxs : edgeTxs;
+
+  if (txList.length) {
+    txEl.innerHTML = `
+      <div class="rp-divider"></div>
+      <div class="section-title" style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Recent Transactions</div>
+      ${txList.map(tx => `
+        <div style="padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;">
+          <div style="display:flex;justify-content:space-between;">
+            <span style="color:var(--text-muted);font-family:monospace;">${timeAgo(tx.timestamp||tx.created_at||tx.createdAt)}</span>
+            <span style="font-family:monospace;color:var(--accent);">${tx.amount ? tx.amount+' USDC' : ''}</span>
+          </div>
+          <div style="margin-top:2px;color:var(--text);">${
+            tx.message || tx.comment || tx.text ||
+            ((tx.from_agent||tx.caller||'') + (tx.to_agent||tx.agent_id ? ' → '+(tx.to_agent||tx.agent_id) : ''))
+            || 'Transaction'
+          }</div>
+          ${tx.status ? `<div style="font-size:10px;color:#27ae60;margin-top:1px;">${tx.status}</div>` : ''}
+        </div>
+      `).join('')}
+    `;
+  } else {
+    txEl.innerHTML = `
+      <div class="rp-divider"></div>
+      <div style="font-size:11px;color:var(--text-muted);text-align:center;padding:8px 0;">No transaction history available</div>
+    `;
   }
 
   const invokeUrl = node.host
@@ -915,16 +1036,16 @@ let particles = [];
 let raycaster, mouse;
 let isDragging = false, prevMouse = { x: 0, y: 0 };
 let sphericalTheta = 0, sphericalPhi = Math.PI / 3;
-let sphericalRadius = 160;
-let targetRadius = 160;
+let sphericalRadius = 300;
+let targetRadius = 300;
 
 function initThree() {
   const container = document.getElementById('canvas-container');
   const W = container.offsetWidth, H = container.offsetHeight;
 
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(60, W / H, 0.1, 2000);
-  camera.position.set(0, 40, 160);
+  camera = new THREE.PerspectiveCamera(70, W / H, 1, 5000);
+  camera.position.set(0, 80, 300);
 
   renderer = new THREE.WebGLRenderer({
     canvas: document.getElementById('three-canvas'),
@@ -966,13 +1087,13 @@ function setupInteraction(container) {
 
   container.addEventListener('wheel', e => {
     e.preventDefault();
-    targetRadius = Math.max(30, Math.min(400, targetRadius + e.deltaY * 0.25));
+    targetRadius = Math.max(50, Math.min(800, targetRadius + e.deltaY * 0.4));
   }, { passive: false });
 
   container.addEventListener('click', onCanvasClick);
 
-  document.getElementById('zoom-in').onclick = () => targetRadius = Math.max(30, targetRadius - 20);
-  document.getElementById('zoom-out').onclick = () => targetRadius = Math.min(400, targetRadius + 20);
+  document.getElementById('zoom-in').onclick = () => targetRadius = Math.max(50, targetRadius - 30);
+  document.getElementById('zoom-out').onclick = () => targetRadius = Math.min(800, targetRadius + 30);
 }
 
 function onDrag(e) {
@@ -1038,9 +1159,9 @@ function forceLayout(nodes, iterations = 150) {
   nodes.forEach((node, i) => {
     if (!node.px) {
       const angle = (i / n) * Math.PI * 2;
-      const radius = 40 + Math.random() * 30;
+      const radius = 80 + Math.random() * 60;
       node.px = Math.cos(angle) * radius;
-      node.py = (Math.random() - 0.5) * 40;
+      node.py = (Math.random() - 0.5) * 80;
       node.pz = Math.sin(angle) * radius;
       node.vx = node.vy = node.vz = 0;
     }
@@ -1058,7 +1179,7 @@ function forceLayout(nodes, iterations = 150) {
         const dy = nodes[i].py - nodes[j].py;
         const dz = nodes[i].pz - nodes[j].pz;
         const dist2 = dx*dx + dy*dy + dz*dz + 0.01;
-        const force = 1200 / dist2;
+        const force = 4000 / dist2;
         nodes[i].vx += dx * force; nodes[j].vx -= dx * force;
         nodes[i].vy += dy * force; nodes[j].vy -= dy * force;
         nodes[i].vz += dz * force; nodes[j].vz -= dz * force;
