@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pulse — Live Agent Economy</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#eef6fd;
+  --panel-bg:#ffffff;
+  --border:#c5ddf5;
+  --grid-color:#b8d4ef;
+  --node-color:#1a5fa8;
+  --edge-color:#90bce8;
+  --accent:#2980d9;
+  --text:#1a2a3a;
+  --text-muted:#5a7a9a;
+  --panel-width:260px;
+  --right-panel-width:300px;
+}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-size:13px;
+  height:100vh;
+  overflow:hidden;
+  display:flex;
+}
+/* Grid background */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:
+    linear-gradient(var(--grid-color) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid-color) 1px,transparent 1px);
+  background-size:40px 40px;
+  opacity:0.25;
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ===== LEFT PANEL ===== */
+#left-panel{
+  width:var(--panel-width);
+  min-width:var(--panel-width);
+  height:100vh;
+  background:var(--panel-bg);
+  border-right:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  overflow-y:auto;
+  z-index:10;
+  position:relative;
+}
+#left-panel::-webkit-scrollbar{width:4px;}
+#left-panel::-webkit-scrollbar-track{background:transparent;}
+#left-panel::-webkit-scrollbar-thumb{background:var(--border);}
+
+.panel-header{
+  padding:20px 16px 12px;
+  border-bottom:1px solid var(--border);
+}
+.panel-header h1{
+  font-size:22px;
+  font-weight:700;
+  color:var(--node-color);
+  letter-spacing:-0.5px;
+}
+.panel-header p{
+  font-size:11px;
+  color:var(--text-muted);
+  margin-top:2px;
+  font-family:monospace;
+}
+
+.section{
+  padding:12px 16px;
+  border-bottom:1px solid var(--border);
+}
+.section-title{
+  font-size:10px;
+  font-weight:600;
+  color:var(--text-muted);
+  text-transform:uppercase;
+  letter-spacing:1px;
+  margin-bottom:10px;
+}
+
+/* Stats grid */
+.stats-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.stat-box{
+  background:var(--bg);
+  border:1px solid var(--border);
+  padding:10px;
+}
+.stat-label{
+  font-size:10px;
+  color:var(--text-muted);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+.stat-value{
+  font-size:18px;
+  font-weight:700;
+  color:var(--node-color);
+  margin-top:2px;
+  font-family:monospace;
+}
+
+/* Top agents */
+.agent-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 0;
+  cursor:pointer;
+  border-bottom:1px solid var(--border);
+}
+.agent-row:last-child{border-bottom:none;}
+.agent-row:hover{background:var(--bg);margin:0 -16px;padding:6px 16px;}
+.agent-rank{
+  font-size:10px;
+  color:var(--text-muted);
+  font-family:monospace;
+  min-width:20px;
+}
+.agent-dot{
+  width:8px;height:8px;
+  border-radius:50%;
+  background:var(--node-color);
+  flex-shrink:0;
+}
+.agent-dot.our{background:var(--accent);}
+.agent-info{flex:1;min-width:0;}
+.agent-name{
+  font-weight:600;
+  font-size:12px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.agent-rep{
+  font-size:10px;
+  color:var(--text-muted);
+  font-family:monospace;
+}
+.rep-bar{
+  height:2px;
+  background:var(--border);
+  margin-top:3px;
+}
+.rep-fill{
+  height:100%;
+  background:var(--accent);
+}
+
+/* Activity feed */
+.activity-item{
+  padding:6px 0;
+  border-bottom:1px solid var(--border);
+  font-size:11px;
+}
+.activity-item:last-child{border-bottom:none;}
+.activity-time{
+  color:var(--text-muted);
+  font-family:monospace;
+  font-size:10px;
+}
+.activity-text{
+  margin-top:2px;
+  line-height:1.4;
+}
+
+/* Our agents section */
+.our-agent-card{
+  background:var(--bg);
+  border:1px solid var(--accent);
+  padding:10px;
+  margin-bottom:8px;
+}
+.our-agent-card:last-child{margin-bottom:0;}
+.our-agent-name{
+  font-weight:700;
+  color:var(--accent);
+  font-size:13px;
+  margin-bottom:6px;
+}
+.endpoint-row{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 0;
+  border-top:1px solid var(--border);
+}
+.endpoint-path{
+  font-family:monospace;
+  font-size:10px;
+  color:var(--node-color);
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.endpoint-price{
+  font-size:10px;
+  font-family:monospace;
+  color:var(--accent);
+  white-space:nowrap;
+}
+.copy-btn{
+  background:none;
+  border:1px solid var(--border);
+  padding:2px 6px;
+  font-size:9px;
+  cursor:pointer;
+  color:var(--text-muted);
+  font-family:monospace;
+}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent);}
+.copy-btn.copied{border-color:#27ae60;color:#27ae60;}
+.endpoint-desc{
+  font-size:10px;
+  color:var(--text-muted);
+  margin-top:2px;
+  padding-left:0;
+}
+
+/* ===== CENTER CANVAS ===== */
+#canvas-container{
+  flex:1;
+  position:relative;
+  overflow:hidden;
+}
+#three-canvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+}
+
+/* LIVE indicator */
+#live-indicator{
+  position:absolute;
+  top:16px;
+  left:16px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  background:var(--panel-bg);
+  border:1px solid var(--border);
+  padding:5px 10px;
+  font-size:11px;
+  font-weight:600;
+  font-family:monospace;
+  color:var(--node-color);
+  z-index:5;
+}
+.live-dot{
+  width:7px;height:7px;
+  border-radius:50%;
+  background:var(--accent);
+  animation:pulse-dot 1.5s ease-in-out infinite;
+}
+@keyframes pulse-dot{
+  0%,100%{opacity:1;transform:scale(1);}
+  50%{opacity:0.5;transform:scale(0.8);}
+}
+
+/* Zoom controls */
+#zoom-controls{
+  position:absolute;
+  top:16px;
+  right:16px;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  z-index:5;
+}
+.zoom-btn{
+  width:32px;height:32px;
+  background:var(--panel-bg);
+  border:1px solid var(--border);
+  font-size:16px;
+  cursor:pointer;
+  color:var(--node-color);
+  display:flex;align-items:center;justify-content:center;
+}
+.zoom-btn:hover{background:var(--bg);border-color:var(--accent);}
+
+/* Tooltip */
+#tooltip{
+  position:absolute;
+  background:var(--panel-bg);
+  border:1px solid var(--border);
+  padding:8px 12px;
+  font-size:11px;
+  pointer-events:none;
+  z-index:20;
+  display:none;
+  max-width:200px;
+}
+#tooltip-name{font-weight:700;color:var(--node-color);margin-bottom:2px;}
+#tooltip-info{color:var(--text-muted);}
+
+/* ===== RIGHT PANEL ===== */
+#right-panel{
+  width:0;
+  min-width:0;
+  height:100vh;
+  background:var(--panel-bg);
+  border-left:1px solid var(--border);
+  overflow:hidden;
+  transition:width 0.25s ease, min-width 0.25s ease;
+  z-index:10;
+  display:flex;
+  flex-direction:column;
+}
+#right-panel.open{
+  width:var(--right-panel-width);
+  min-width:var(--right-panel-width);
+}
+#right-panel-inner{
+  width:var(--right-panel-width);
+  padding:16px;
+  overflow-y:auto;
+  height:100%;
+}
+#right-panel-inner::-webkit-scrollbar{width:4px;}
+#right-panel-inner::-webkit-scrollbar-thumb{background:var(--border);}
+
+.rp-close{
+  float:right;
+  background:none;
+  border:none;
+  font-size:16px;
+  cursor:pointer;
+  color:var(--text-muted);
+  line-height:1;
+}
+.rp-close:hover{color:var(--text);}
+.rp-agent-name{
+  font-size:18px;
+  font-weight:700;
+  color:var(--node-color);
+  margin-bottom:4px;
+  clear:both;
+}
+.rp-desc{
+  font-size:12px;
+  color:var(--text-muted);
+  line-height:1.5;
+  margin-bottom:12px;
+}
+.rp-divider{height:1px;background:var(--border);margin:12px 0;}
+.rp-field{display:flex;justify-content:space-between;align-items:center;padding:5px 0;}
+.rp-field-label{color:var(--text-muted);font-size:11px;}
+.rp-field-value{font-weight:600;font-size:12px;font-family:monospace;}
+.health-online{color:#27ae60;}
+.health-offline{color:#e74c3c;}
+.health-unknown{color:var(--text-muted);}
+.invoke-btn{
+  display:block;
+  width:100%;
+  margin-top:16px;
+  padding:10px;
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  text-align:center;
+  text-decoration:none;
+  font-family:monospace;
+}
+.invoke-btn:hover{background:var(--node-color);}
+
+/* Loading overlay */
+#loading{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(238,246,253,0.8);
+  z-index:50;
+  font-family:monospace;
+  font-size:13px;
+  color:var(--node-color);
+  flex-direction:column;
+  gap:12px;
+}
+.loading-bar{
+  width:200px;
+  height:2px;
+  background:var(--border);
+  overflow:hidden;
+}
+.loading-fill{
+  height:100%;
+  background:var(--accent);
+  width:0%;
+  transition:width 0.3s ease;
+}
+</style>
+</head>
+<body>
+
+<!-- LEFT PANEL -->
+<div id="left-panel">
+  <div class="panel-header">
+    <h1>Pulse</h1>
+    <p>live simulation · agent economy</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="section">
+    <div class="section-title">Network Stats</div>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-label">Total Agents</div>
+        <div class="stat-value" id="stat-agents">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Active Now</div>
+        <div class="stat-value" id="stat-active">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Volume</div>
+        <div class="stat-value" id="stat-volume">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Transactions</div>
+        <div class="stat-value" id="stat-txns">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Our Agents -->
+  <div class="section">
+    <div class="section-title">Our Agents</div>
+
+    <div class="our-agent-card">
+      <div class="our-agent-name">Distill</div>
+      <div class="endpoint-desc" style="margin-bottom:6px;font-size:10px;color:var(--text-muted);">distill-agent-production.up.railway.app</div>
+      <div class="endpoint-row">
+        <div style="flex:1;min-width:0;">
+          <div class="endpoint-path">/entrypoints/process/invoke</div>
+          <div class="endpoint-desc">blockchain data cleaning</div>
+        </div>
+        <span class="endpoint-price">0.02 USDC</span>
+        <button class="copy-btn" onclick="copyEndpoint(this,'https://distill-agent-production.up.railway.app/entrypoints/process/invoke')">copy</button>
+      </div>
+    </div>
+
+    <div class="our-agent-card">
+      <div class="our-agent-name">Parse</div>
+      <div class="endpoint-desc" style="margin-bottom:6px;font-size:10px;color:var(--text-muted);">parse-agent-production.up.railway.app</div>
+      <div class="endpoint-row">
+        <div style="flex:1;min-width:0;">
+          <div class="endpoint-path">/entrypoints/product/invoke</div>
+          <div class="endpoint-desc">e-commerce HTML → JSON</div>
+        </div>
+        <span class="endpoint-price">0.01 USDC</span>
+        <button class="copy-btn" onclick="copyEndpoint(this,'https://parse-agent-production.up.railway.app/entrypoints/product/invoke')">copy</button>
+      </div>
+      <div class="endpoint-row">
+        <div style="flex:1;min-width:0;">
+          <div class="endpoint-path">/entrypoints/serp/invoke</div>
+          <div class="endpoint-desc">search results → JSON</div>
+        </div>
+        <span class="endpoint-price">0.01 USDC</span>
+        <button class="copy-btn" onclick="copyEndpoint(this,'https://parse-agent-production.up.railway.app/entrypoints/serp/invoke')">copy</button>
+      </div>
+      <div class="endpoint-row">
+        <div style="flex:1;min-width:0;">
+          <div class="endpoint-path">/entrypoints/entity/invoke</div>
+          <div class="endpoint-desc">text → entities</div>
+        </div>
+        <span class="endpoint-price">0.01 USDC</span>
+        <button class="copy-btn" onclick="copyEndpoint(this,'https://parse-agent-production.up.railway.app/entrypoints/entity/invoke')">copy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Agents -->
+  <div class="section">
+    <div class="section-title">Top Agents</div>
+    <div id="top-agents-list">
+      <!-- filled by JS -->
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="section">
+    <div class="section-title">Recent Activity</div>
+    <div id="activity-list">
+      <!-- filled by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- CENTER CANVAS -->
+<div id="canvas-container">
+  <canvas id="three-canvas"></canvas>
+
+  <div id="live-indicator">
+    <span class="live-dot"></span>
+    LIVE
+  </div>
+
+  <div id="zoom-controls">
+    <button class="zoom-btn" id="zoom-in">+</button>
+    <button class="zoom-btn" id="zoom-out">−</button>
+  </div>
+
+  <div id="tooltip">
+    <div id="tooltip-name"></div>
+    <div id="tooltip-info"></div>
+  </div>
+
+  <div id="loading">
+    <div>Initializing Pulse...</div>
+    <div class="loading-bar"><div class="loading-fill" id="loading-fill"></div></div>
+    <div id="loading-status" style="font-size:11px;color:var(--text-muted);">Fetching agent data</div>
+  </div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div id="right-panel">
+  <div id="right-panel-inner">
+    <button class="rp-close" onclick="closeRightPanel()">✕</button>
+    <div class="rp-agent-name" id="rp-name">Agent Name</div>
+    <div class="rp-desc" id="rp-desc">—</div>
+    <div class="rp-divider"></div>
+    <div class="rp-field">
+      <span class="rp-field-label">Network</span>
+      <span class="rp-field-value" id="rp-network">—</span>
+    </div>
+    <div class="rp-field">
+      <span class="rp-field-label">Price</span>
+      <span class="rp-field-value" id="rp-price">—</span>
+    </div>
+    <div class="rp-field">
+      <span class="rp-field-label">Reputation</span>
+      <span class="rp-field-value" id="rp-rep">—</span>
+    </div>
+    <div class="rp-field">
+      <span class="rp-field-label">Health</span>
+      <span class="rp-field-value" id="rp-health">—</span>
+    </div>
+    <div class="rp-divider"></div>
+    <div id="rp-endpoints"></div>
+    <a class="invoke-btn" id="rp-invoke" href="#" target="_blank">Invoke →</a>
+  </div>
+</div>
+
+<!-- THREE.JS CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+// ===================================================
+// PULSE — Main Application
+// ===================================================
+
+const OUR_AGENTS = [
+  {
+    id: 'distill',
+    name: 'Distill',
+    host: 'distill-agent-production.up.railway.app',
+    description: 'Blockchain data cleaning & normalization agent',
+    network: 'Base',
+    reputation: 95,
+    endpoints: [
+      { path: '/entrypoints/process/invoke', price: '0.02 USDC', desc: 'blockchain data cleaning' }
+    ]
+  },
+  {
+    id: 'parse',
+    name: 'Parse',
+    host: 'parse-agent-production.up.railway.app',
+    description: 'Structured data extraction from web content',
+    network: 'Base',
+    reputation: 92,
+    endpoints: [
+      { path: '/entrypoints/product/invoke', price: '0.01 USDC', desc: 'e-commerce HTML → JSON' },
+      { path: '/entrypoints/serp/invoke', price: '0.01 USDC', desc: 'search results → JSON' },
+      { path: '/entrypoints/entity/invoke', price: '0.01 USDC', desc: 'text → entities' }
+    ]
+  }
+];
+
+// Mock fallback data
+const MOCK_AGENTS = [
+  { id: 'mock1', name: 'DataFlow', reputation: 88, network: 'Base', price: '0.05 USDC', description: 'Real-time data pipeline agent' },
+  { id: 'mock2', name: 'CodeGen', reputation: 84, network: 'Base', price: '0.10 USDC', description: 'AI code generation service' },
+  { id: 'mock3', name: 'Summarize', reputation: 79, network: 'Ethereum', price: '0.03 USDC', description: 'Text summarization agent' },
+  { id: 'mock4', name: 'Translate', reputation: 76, network: 'Base', price: '0.02 USDC', description: 'Multi-language translation' },
+  { id: 'mock5', name: 'Classify', reputation: 73, network: 'Solana', price: '0.01 USDC', description: 'Content classification' },
+  { id: 'mock6', name: 'Embedder', reputation: 70, network: 'Base', price: '0.02 USDC', description: 'Vector embedding service' },
+  { id: 'mock7', name: 'Router', reputation: 68, network: 'Base', price: '0.01 USDC', description: 'Agent routing & orchestration' },
+  { id: 'mock8', name: 'Monitor', reputation: 65, network: 'Ethereum', price: '0.04 USDC', description: 'On-chain monitoring agent' },
+  { id: 'mock9', name: 'Validator', reputation: 62, network: 'Base', price: '0.03 USDC', description: 'Data validation service' },
+  { id: 'mock10', name: 'Indexer', reputation: 59, network: 'Solana', price: '0.02 USDC', description: 'Blockchain indexing agent' },
+];
+
+const MOCK_STATS = {
+  totalAgents: 247,
+  activeNow: 89,
+  volume: '$14.2K',
+  transactions: 3841
+};
+
+const MOCK_ACTIVITY = [
+  { time: '12s ago', text: 'CodeGen → DataFlow · 0.05 USDC' },
+  { time: '45s ago', text: 'Distill processed 142 records' },
+  { time: '1m ago', text: 'Parse extracted 38 products' },
+  { time: '2m ago', text: 'Translate → Summarize · 0.03 USDC' },
+  { time: '3m ago', text: 'New agent joined: Embedder' },
+];
+
+// ===================================================
+// STATE
+// ===================================================
+let nodes = [];
+let edges = [];
+let agentMap = {};
+let selectedNode = null;
+
+// SWR cache
+const cache = {};
+const reqQueue = [];
+let reqCount = 0;
+let lastReset = Date.now();
+
+async function fetchWithCache(url, ttl = 30000) {
+  const now = Date.now();
+  if (cache[url] && now - cache[url].ts < ttl) return cache[url].data;
+
+  // Rate limit: 10 req/min
+  if (now - lastReset > 60000) { reqCount = 0; lastReset = now; }
+  if (reqCount >= 10) {
+    await new Promise(r => setTimeout(r, 6000));
+    return fetchWithCache(url, ttl);
+  }
+
+  try {
+    reqCount++;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    cache[url] = { data, ts: now };
+    return data;
+  } catch (e) {
+    console.warn('Fetch failed:', url, e.message);
+    return null;
+  }
+}
+
+// ===================================================
+// DATA LOADING
+// ===================================================
+function setLoadingStatus(text, pct) {
+  document.getElementById('loading-status').textContent = text;
+  document.getElementById('loading-fill').style.width = pct + '%';
+}
+
+function buildAgentNodes(rawAgents) {
+  // Start with our agents
+  const nodeList = OUR_AGENTS.map(a => ({
+    ...a,
+    isOurs: true,
+    size: 2.2,
+    color: 0x2980d9,
+  }));
+
+  // Add fetched or mock agents
+  const others = rawAgents || MOCK_AGENTS;
+  others.slice(0, 20).forEach((a, i) => {
+    const rep = a.reputation || a.score || Math.floor(Math.random() * 40 + 50);
+    nodeList.push({
+      id: a.id || `agent-${i}`,
+      name: a.name || a.id || `Agent ${i}`,
+      reputation: rep,
+      network: a.network || 'Base',
+      price: a.price || '0.02 USDC',
+      description: a.description || a.desc || 'AI agent service',
+      isOurs: false,
+      size: 0.6 + (rep / 100) * 1.0,
+      color: 0x1a5fa8,
+      endpoints: a.endpoints || []
+    });
+  });
+
+  return nodeList;
+}
+
+function buildEdges(nodeList) {
+  const edgeList = [];
+  const n = nodeList.length;
+  // Create sparse random edges + connections to our agents
+  for (let i = 0; i < Math.min(n * 2, 40); i++) {
+    const from = Math.floor(Math.random() * n);
+    let to = Math.floor(Math.random() * n);
+    if (to === from) to = (from + 1) % n;
+    edgeList.push({ from, to, weight: Math.random() });
+  }
+  // Always connect our agents to a few others
+  [0, 1].forEach(ourIdx => {
+    for (let k = 0; k < 4; k++) {
+      const target = 2 + Math.floor(Math.random() * (n - 2));
+      edgeList.push({ from: ourIdx, to: target, weight: 0.8 });
+    }
+  });
+  return edgeList;
+}
+
+async function loadData() {
+  setLoadingStatus('Fetching agent services...', 10);
+
+  // Step 1: Try xgate services
+  let xgateAgents = null;
+  try {
+    const xg = await fetchWithCache('https://api.xgate.run/services');
+    if (xg && Array.isArray(xg)) xgateAgents = xg;
+    else if (xg && xg.services) xgateAgents = xg.services;
+  } catch(e) {}
+
+  setLoadingStatus('Fetching network stats...', 30);
+
+  // Step 2: Try 8004scan stats
+  let stats = null;
+  try {
+    const s = await fetchWithCache('https://8004scan.io/api/v1/public/stats');
+    if (s) stats = s;
+  } catch(e) {}
+
+  setLoadingStatus('Loading agent profiles...', 50);
+
+  // Step 3: Try 8004scan agents
+  let scanAgents = null;
+  try {
+    const a = await fetchWithCache('https://8004scan.io/api/v1/public/agents');
+    if (a && Array.isArray(a)) scanAgents = a;
+    else if (a && a.agents) scanAgents = a.agents;
+  } catch(e) {}
+
+  setLoadingStatus('Building network graph...', 70);
+
+  // Merge agents
+  const rawAgents = xgateAgents || scanAgents || MOCK_AGENTS;
+  nodes = buildAgentNodes(rawAgents);
+  edges = buildEdges(nodes);
+
+  // Build agent map
+  nodes.forEach(n => { agentMap[n.id] = n; });
+
+  // Update stats
+  if (stats) {
+    updateStats(stats);
+  } else {
+    updateStats(MOCK_STATS);
+  }
+
+  setLoadingStatus('Rendering 3D graph...', 85);
+  updateTopAgents();
+  updateActivity(MOCK_ACTIVITY);
+
+  return { nodes, edges };
+}
+
+// ===================================================
+// UI UPDATES
+// ===================================================
+function updateStats(s) {
+  document.getElementById('stat-agents').textContent = s.totalAgents || s.total_agents || MOCK_STATS.totalAgents;
+  document.getElementById('stat-active').textContent = s.activeNow || s.active_now || s.active || MOCK_STATS.activeNow;
+  document.getElementById('stat-volume').textContent = s.volume || s.totalVolume || MOCK_STATS.volume;
+  document.getElementById('stat-txns').textContent = s.transactions || s.totalTransactions || MOCK_STATS.transactions;
+}
+
+function updateTopAgents() {
+  const sorted = [...nodes].sort((a, b) => (b.reputation || 0) - (a.reputation || 0)).slice(0, 5);
+  const el = document.getElementById('top-agents-list');
+  el.innerHTML = sorted.map((a, i) => `
+    <div class="agent-row" onclick="selectNodeByName('${a.name}')">
+      <span class="agent-rank">${i + 1}</span>
+      <span class="agent-dot ${a.isOurs ? 'our' : ''}"></span>
+      <div class="agent-info">
+        <div class="agent-name">${a.name}</div>
+        <div class="agent-rep">${a.reputation || '?'}/100</div>
+        <div class="rep-bar"><div class="rep-fill" style="width:${a.reputation || 0}%"></div></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateActivity(items) {
+  const el = document.getElementById('activity-list');
+  el.innerHTML = items.map(item => `
+    <div class="activity-item">
+      <div class="activity-time">${item.time}</div>
+      <div class="activity-text">${item.text}</div>
+    </div>
+  `).join('');
+}
+
+function openRightPanel(node) {
+  selectedNode = node;
+  document.getElementById('rp-name').textContent = node.name;
+  document.getElementById('rp-desc').textContent = node.description || '—';
+  document.getElementById('rp-network').textContent = node.network || 'Base';
+  document.getElementById('rp-price').textContent = node.price || '—';
+  document.getElementById('rp-rep').textContent = (node.reputation || '?') + '/100';
+
+  const hEl = document.getElementById('rp-health');
+  hEl.textContent = node.isOurs ? 'Online' : (Math.random() > 0.2 ? 'Online' : 'Unknown');
+  hEl.className = 'rp-field-value health-online';
+
+  // Endpoints
+  const epEl = document.getElementById('rp-endpoints');
+  if (node.endpoints && node.endpoints.length) {
+    epEl.innerHTML = node.endpoints.map(ep => `
+      <div class="endpoint-row" style="border-top:1px solid var(--border);margin-bottom:4px;">
+        <div style="flex:1;min-width:0;">
+          <div class="endpoint-path">${ep.path}</div>
+          <div class="endpoint-desc">${ep.desc || ep.description || ''}</div>
+        </div>
+        <span class="endpoint-price">${ep.price}</span>
+      </div>
+    `).join('');
+  } else {
+    epEl.innerHTML = '';
+  }
+
+  const invokeUrl = node.host
+    ? `https://${node.host}${(node.endpoints && node.endpoints[0]) ? node.endpoints[0].path : ''}`
+    : '#';
+  document.getElementById('rp-invoke').href = invokeUrl;
+
+  document.getElementById('right-panel').classList.add('open');
+  if (renderer) renderer.setSize(
+    document.getElementById('canvas-container').offsetWidth,
+    document.getElementById('canvas-container').offsetHeight
+  );
+}
+
+function closeRightPanel() {
+  document.getElementById('right-panel').classList.remove('open');
+  selectedNode = null;
+  if (renderer) {
+    setTimeout(() => renderer.setSize(
+      document.getElementById('canvas-container').offsetWidth,
+      document.getElementById('canvas-container').offsetHeight
+    ), 260);
+  }
+}
+
+function selectNodeByName(name) {
+  const node = nodes.find(n => n.name === name);
+  if (node && node._mesh) {
+    openRightPanel(node);
+    // Camera fly-to
+    const pos = node._mesh.position;
+    camera.position.set(pos.x + 5, pos.y + 5, pos.z + 15);
+    controls.target.copy(pos);
+  }
+}
+
+function copyEndpoint(btn, url) {
+  navigator.clipboard.writeText(url).then(() => {
+    btn.textContent = 'copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ===================================================
+// THREE.JS 3D GRAPH
+// ===================================================
+let scene, camera, renderer, controls, animId;
+let nodeMeshes = [], edgeLines = [];
+let particles = [];
+let raycaster, mouse;
+let isDragging = false, prevMouse = { x: 0, y: 0 };
+let sphericalTheta = 0, sphericalPhi = Math.PI / 3;
+let sphericalRadius = 35;
+let targetRadius = 35;
+
+function initThree() {
+  const container = document.getElementById('canvas-container');
+  const W = container.offsetWidth, H = container.offsetHeight;
+
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(55, W / H, 0.1, 1000);
+  camera.position.set(0, 8, 35);
+
+  renderer = new THREE.WebGLRenderer({
+    canvas: document.getElementById('three-canvas'),
+    antialias: true,
+    alpha: true
+  });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(W, H);
+  renderer.setClearColor(0x000000, 0);
+
+  // Lights
+  const ambient = new THREE.AmbientLight(0xeef6fd, 1.2);
+  scene.add(ambient);
+  const dir = new THREE.DirectionalLight(0x2980d9, 0.8);
+  dir.position.set(10, 20, 10);
+  scene.add(dir);
+
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2(-999, -999);
+
+  setupInteraction(container);
+  window.addEventListener('resize', onResize);
+}
+
+function setupInteraction(container) {
+  container.addEventListener('mousedown', e => {
+    isDragging = false;
+    prevMouse = { x: e.clientX, y: e.clientY };
+    container.addEventListener('mousemove', onDrag);
+    container.addEventListener('mouseup', onMouseUp);
+  });
+
+  container.addEventListener('mousemove', e => {
+    const rect = container.getBoundingClientRect();
+    mouse.x = ((e.clientX - rect.left) / container.offsetWidth) * 2 - 1;
+    mouse.y = -((e.clientY - rect.top) / container.offsetHeight) * 2 + 1;
+    updateTooltip(e);
+  });
+
+  container.addEventListener('wheel', e => {
+    e.preventDefault();
+    targetRadius = Math.max(10, Math.min(80, targetRadius + e.deltaY * 0.05));
+  }, { passive: false });
+
+  container.addEventListener('click', onCanvasClick);
+
+  document.getElementById('zoom-in').onclick = () => targetRadius = Math.max(10, targetRadius - 5);
+  document.getElementById('zoom-out').onclick = () => targetRadius = Math.min(80, targetRadius + 5);
+}
+
+function onDrag(e) {
+  const dx = e.clientX - prevMouse.x;
+  const dy = e.clientY - prevMouse.y;
+  if (Math.abs(dx) > 2 || Math.abs(dy) > 2) isDragging = true;
+  sphericalTheta -= dx * 0.008;
+  sphericalPhi = Math.max(0.2, Math.min(Math.PI - 0.2, sphericalPhi + dy * 0.008));
+  prevMouse = { x: e.clientX, y: e.clientY };
+}
+
+function onMouseUp() {
+  document.getElementById('canvas-container').removeEventListener('mousemove', onDrag);
+  document.getElementById('canvas-container').removeEventListener('mouseup', onMouseUp);
+}
+
+function updateTooltip(e) {
+  if (!scene || !camera) return;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(nodeMeshes);
+  const tooltip = document.getElementById('tooltip');
+
+  if (hits.length) {
+    const node = hits[0].object.userData.node;
+    if (node) {
+      tooltip.style.display = 'block';
+      tooltip.style.left = (e.offsetX + 12) + 'px';
+      tooltip.style.top = (e.offsetY + 12) + 'px';
+      document.getElementById('tooltip-name').textContent = node.name;
+      document.getElementById('tooltip-info').textContent =
+        `Rep: ${node.reputation || '?'}/100 · ${node.network || 'Base'}`;
+    }
+    document.getElementById('canvas-container').style.cursor = 'pointer';
+  } else {
+    tooltip.style.display = 'none';
+    document.getElementById('canvas-container').style.cursor = 'default';
+  }
+}
+
+function onCanvasClick() {
+  if (isDragging) { isDragging = false; return; }
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(nodeMeshes);
+  if (hits.length) {
+    openRightPanel(hits[0].object.userData.node);
+  }
+}
+
+function onResize() {
+  const container = document.getElementById('canvas-container');
+  const W = container.offsetWidth, H = container.offsetHeight;
+  camera.aspect = W / H;
+  camera.updateProjectionMatrix();
+  renderer.setSize(W, H);
+}
+
+// ===================================================
+// GRAPH BUILDING
+// ===================================================
+function forceLayout(nodes, iterations = 150) {
+  const n = nodes.length;
+  // Initialize positions
+  nodes.forEach((node, i) => {
+    if (!node.px) {
+      const angle = (i / n) * Math.PI * 2;
+      const radius = 8 + Math.random() * 8;
+      node.px = Math.cos(angle) * radius;
+      node.py = (Math.random() - 0.5) * 10;
+      node.pz = Math.sin(angle) * radius;
+      node.vx = node.vy = node.vz = 0;
+    }
+  });
+
+  // Run force simulation
+  for (let iter = 0; iter < iterations; iter++) {
+    const k = iter / iterations;
+    const temp = 3 * (1 - k);
+
+    // Repulsion
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        const dx = nodes[i].px - nodes[j].px;
+        const dy = nodes[i].py - nodes[j].py;
+        const dz = nodes[i].pz - nodes[j].pz;
+        const dist2 = dx*dx + dy*dy + dz*dz + 0.01;
+        const force = 80 / dist2;
+        nodes[i].vx += dx * force; nodes[j].vx -= dx * force;
+        nodes[i].vy += dy * force; nodes[j].vy -= dy * force;
+        nodes[i].vz += dz * force; nodes[j].vz -= dz * force;
+      }
+    }
+
+    // Apply velocities
+    nodes.forEach(node => {
+      const speed = Math.sqrt(node.vx*node.vx + node.vy*node.vy + node.vz*node.vz);
+      if (speed > temp) {
+        node.vx = (node.vx / speed) * temp;
+        node.vy = (node.vy / speed) * temp;
+        node.vz = (node.vz / speed) * temp;
+      }
+      node.px += node.vx;
+      node.py += node.vy;
+      node.pz += node.vz;
+      node.vx *= 0.7; node.vy *= 0.7; node.vz *= 0.7;
+    });
+  }
+}
+
+function buildGraph() {
+  // Clear old
+  nodeMeshes.forEach(m => scene.remove(m));
+  edgeLines.forEach(l => scene.remove(l));
+  particles.forEach(p => scene.remove(p));
+  nodeMeshes = []; edgeLines = []; particles = [];
+
+  forceLayout(nodes);
+
+  // Create edges first (behind nodes)
+  edges.forEach(edge => {
+    const from = nodes[edge.from];
+    const to = nodes[edge.to];
+    if (!from || !to) return;
+
+    const points = [
+      new THREE.Vector3(from.px, from.py, from.pz),
+      new THREE.Vector3(to.px, to.py, to.pz)
+    ];
+    const geo = new THREE.BufferGeometry().setFromPoints(points);
+    const mat = new THREE.LineBasicMaterial({
+      color: 0x90bce8,
+      transparent: true,
+      opacity: 0.4 + edge.weight * 0.3
+    });
+    const line = new THREE.Line(geo, mat);
+    line.userData = { edge, from, to };
+    scene.add(line);
+    edgeLines.push(line);
+  });
+
+  // Create nodes
+  nodes.forEach(node => {
+    const geo = new THREE.SphereGeometry(node.size * 0.5, 20, 20);
+    const mat = new THREE.MeshPhongMaterial({
+      color: node.color,
+      shininess: 60,
+      emissive: node.isOurs ? 0x1a4070 : 0x0d2040,
+      emissiveIntensity: 0.3
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(node.px, node.py, node.pz);
+    mesh.userData.node = node;
+    node._mesh = mesh;
+    scene.add(mesh);
+    nodeMeshes.push(mesh);
+
+    // Label for our agents (using sprite)
+    if (node.isOurs) {
+      const sprite = makeLabel(node.name);
+      sprite.position.set(node.px, node.py + node.size * 0.5 + 1.2, node.pz);
+      scene.add(sprite);
+    }
+
+    // Pulse ring for our agents
+    if (node.isOurs) {
+      const ringGeo = new THREE.RingGeometry(node.size * 0.55, node.size * 0.65, 32);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: 0x2980d9,
+        transparent: true,
+        opacity: 0.5,
+        side: THREE.DoubleSide
+      });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.position.copy(mesh.position);
+      ring.userData.isRing = true;
+      ring.userData.node = node;
+      scene.add(ring);
+    }
+  });
+}
+
+function makeLabel(text) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256; canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 256, 64);
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.fillRect(0, 16, 256, 32);
+  ctx.fillStyle = '#2980d9';
+  ctx.font = 'bold 22px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(text, 128, 37);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(4, 1, 1);
+  return sprite;
+}
+
+// ===================================================
+// PAYMENT FLOW PARTICLES
+// ===================================================
+function spawnParticle(fromNode, toNode) {
+  const geo = new THREE.SphereGeometry(0.12, 8, 8);
+  const mat = new THREE.MeshBasicMaterial({ color: 0x2980d9 });
+  const mesh = new THREE.Mesh(geo, mat);
+
+  const from = new THREE.Vector3(fromNode.px, fromNode.py, fromNode.pz);
+  const to = new THREE.Vector3(toNode.px, toNode.py, toNode.pz);
+
+  mesh.position.copy(from);
+  scene.add(mesh);
+
+  particles.push({ mesh, from, to, t: 0, speed: 0.008 + Math.random() * 0.01 });
+}
+
+function updateParticles() {
+  particles = particles.filter(p => {
+    p.t += p.speed;
+    if (p.t >= 1) {
+      scene.remove(p.mesh);
+      return false;
+    }
+    p.mesh.position.lerpVectors(p.from, p.to, p.t);
+    // Arc
+    const arc = Math.sin(p.t * Math.PI) * 1.5;
+    p.mesh.position.y += arc;
+    return true;
+  });
+}
+
+// Spawn particles periodically
+function scheduleParticles() {
+  if (nodes.length < 2 || edgeLines.length === 0) return;
+  const edge = edgeLines[Math.floor(Math.random() * edgeLines.length)];
+  if (edge && edge.userData.from && edge.userData.to) {
+    spawnParticle(edge.userData.from, edge.userData.to);
+  }
+}
+
+// ===================================================
+// ANIMATION LOOP
+// ===================================================
+let clock = new THREE.Clock();
+let ringPhase = 0;
+
+function animate() {
+  animId = requestAnimationFrame(animate);
+  const delta = clock.getDelta();
+  ringPhase += delta;
+
+  // Camera orbit
+  sphericalRadius += (targetRadius - sphericalRadius) * 0.05;
+  camera.position.x = sphericalRadius * Math.sin(sphericalPhi) * Math.sin(sphericalTheta);
+  camera.position.y = sphericalRadius * Math.cos(sphericalPhi);
+  camera.position.z = sphericalRadius * Math.sin(sphericalPhi) * Math.cos(sphericalTheta);
+  camera.lookAt(0, 0, 0);
+
+  // Animate rings
+  scene.children.forEach(obj => {
+    if (obj.userData.isRing) {
+      const s = 1 + 0.15 * Math.sin(ringPhase * 2.5);
+      obj.scale.set(s, s, s);
+      obj.material.opacity = 0.5 + 0.3 * Math.sin(ringPhase * 2.5);
+      // Billboard ring toward camera
+      obj.lookAt(camera.position);
+    }
+  });
+
+  // Node hover highlight
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(nodeMeshes);
+  nodeMeshes.forEach(m => {
+    const node = m.userData.node;
+    if (!node) return;
+    const isHit = hits.length && hits[0].object === m;
+    m.material.emissiveIntensity = isHit ? 0.6 : (node.isOurs ? 0.3 : 0.15);
+  });
+
+  updateParticles();
+  renderer.render(scene, camera);
+}
+
+// ===================================================
+// WEBSOCKET — Live Base chain payments
+// ===================================================
+let wsRetries = 0;
+function connectWebSocket() {
+  // Public Base WebSocket RPC
+  const WS_URL = 'wss://mainnet.base.org';
+  const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+  // TransferWithAuthorization topic (keccak256)
+  const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+
+  try {
+    const ws = new WebSocket(WS_URL);
+    ws.onopen = () => {
+      wsRetries = 0;
+      // Subscribe to USDC Transfer events
+      ws.send(JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'eth_subscribe',
+        params: ['logs', {
+          address: USDC,
+          topics: [TRANSFER_TOPIC]
+        }]
+      }));
+    };
+
+    ws.onmessage = e => {
+      try {
+        const msg = JSON.parse(e.data);
+        if (msg.params && msg.params.result) {
+          handleTransferEvent(msg.params.result);
+        }
+      } catch(err) {}
+    };
+
+    ws.onclose = () => {
+      wsRetries++;
+      setTimeout(connectWebSocket, Math.min(3000 * wsRetries, 30000));
+    };
+    ws.onerror = () => ws.close();
+  } catch(e) {
+    setTimeout(connectWebSocket, 3000);
+  }
+}
+
+function handleTransferEvent(log) {
+  // from → to are topics[1] and topics[2]
+  if (!log.topics || log.topics.length < 3) return;
+  const fromAddr = '0x' + log.topics[1].slice(26).toLowerCase();
+  const toAddr = '0x' + log.topics[2].slice(26).toLowerCase();
+
+  // Try to match to known nodes (unlikely in demo, but animate anyway)
+  if (nodes.length >= 2) {
+    const fromIdx = Math.floor(Math.random() * nodes.length);
+    let toIdx = Math.floor(Math.random() * nodes.length);
+    if (toIdx === fromIdx) toIdx = (fromIdx + 1) % nodes.length;
+    spawnParticle(nodes[fromIdx], nodes[toIdx]);
+
+    // Update activity feed
+    const activity = document.getElementById('activity-list');
+    const first = activity.firstElementChild;
+    const item = document.createElement('div');
+    item.className = 'activity-item';
+    item.innerHTML = `
+      <div class="activity-time">just now</div>
+      <div class="activity-text">Transfer: ${fromAddr.slice(0,6)}…→${toAddr.slice(0,6)}… (Base)</div>
+    `;
+    if (first) activity.insertBefore(item, first);
+    // Keep only 5
+    while (activity.children.length > 5) activity.removeChild(activity.lastChild);
+  }
+}
+
+// ===================================================
+// PERIODIC UPDATES
+// ===================================================
+async function periodicUpdate() {
+  try {
+    const fb = await fetchWithCache('https://8004scan.io/api/v1/public/feedbacks', 30000);
+    if (fb && Array.isArray(fb)) {
+      const items = fb.slice(0, 5).map(f => ({
+        time: timeAgo(f.timestamp || f.created_at),
+        text: f.message || f.text || f.comment || 'Feedback received'
+      }));
+      if (items.length) updateActivity(items);
+    }
+  } catch(e) {}
+}
+
+function timeAgo(ts) {
+  if (!ts) return 'recently';
+  const diff = (Date.now() - new Date(ts).getTime()) / 1000;
+  if (diff < 60) return Math.floor(diff) + 's ago';
+  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+  return Math.floor(diff / 3600) + 'h ago';
+}
+
+// ===================================================
+// MAIN
+// ===================================================
+async function main() {
+  initThree();
+
+  const { nodes: loadedNodes, edges: loadedEdges } = await loadData();
+
+  setLoadingStatus('Starting simulation...', 95);
+  buildGraph();
+
+  // Hide loading
+  setTimeout(() => {
+    document.getElementById('loading').style.display = 'none';
+  }, 400);
+
+  animate();
+
+  // Particle spawner
+  setInterval(scheduleParticles, 1200);
+
+  // Live chain
+  connectWebSocket();
+
+  // Periodic data refresh
+  setInterval(periodicUpdate, 30000);
+
+  setLoadingStatus('Ready', 100);
+}
+
+main();
+</script>
+</body>
+</html>
