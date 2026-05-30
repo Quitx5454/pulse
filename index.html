@@ -891,8 +891,8 @@ let particles = [];
 let raycaster, mouse;
 let isDragging = false, prevMouse = { x: 0, y: 0 };
 let sphericalTheta = 0, sphericalPhi = Math.PI / 3;
-let sphericalRadius = 35;
-let targetRadius = 35;
+let sphericalRadius = 70;
+let targetRadius = 70;
 
 function initThree() {
   const container = document.getElementById('canvas-container');
@@ -900,7 +900,7 @@ function initThree() {
 
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(55, W / H, 0.1, 1000);
-  camera.position.set(0, 8, 35);
+  camera.position.set(0, 20, 70);
 
   renderer = new THREE.WebGLRenderer({
     canvas: document.getElementById('three-canvas'),
@@ -942,13 +942,13 @@ function setupInteraction(container) {
 
   container.addEventListener('wheel', e => {
     e.preventDefault();
-    targetRadius = Math.max(10, Math.min(80, targetRadius + e.deltaY * 0.05));
+    targetRadius = Math.max(15, Math.min(200, targetRadius + e.deltaY * 0.12));
   }, { passive: false });
 
   container.addEventListener('click', onCanvasClick);
 
-  document.getElementById('zoom-in').onclick = () => targetRadius = Math.max(10, targetRadius - 5);
-  document.getElementById('zoom-out').onclick = () => targetRadius = Math.min(80, targetRadius + 5);
+  document.getElementById('zoom-in').onclick = () => targetRadius = Math.max(15, targetRadius - 10);
+  document.getElementById('zoom-out').onclick = () => targetRadius = Math.min(200, targetRadius + 10);
 }
 
 function onDrag(e) {
@@ -1014,9 +1014,9 @@ function forceLayout(nodes, iterations = 150) {
   nodes.forEach((node, i) => {
     if (!node.px) {
       const angle = (i / n) * Math.PI * 2;
-      const radius = 8 + Math.random() * 8;
+      const radius = 18 + Math.random() * 16;
       node.px = Math.cos(angle) * radius;
-      node.py = (Math.random() - 0.5) * 10;
+      node.py = (Math.random() - 0.5) * 20;
       node.pz = Math.sin(angle) * radius;
       node.vx = node.vy = node.vz = 0;
     }
@@ -1034,7 +1034,7 @@ function forceLayout(nodes, iterations = 150) {
         const dy = nodes[i].py - nodes[j].py;
         const dz = nodes[i].pz - nodes[j].pz;
         const dist2 = dx*dx + dy*dy + dz*dz + 0.01;
-        const force = 80 / dist2;
+        const force = 400 / dist2;
         nodes[i].vx += dx * force; nodes[j].vx -= dx * force;
         nodes[i].vy += dy * force; nodes[j].vy -= dy * force;
         nodes[i].vz += dz * force; nodes[j].vz -= dz * force;
@@ -1066,26 +1066,28 @@ function buildGraph() {
 
   forceLayout(nodes);
 
-  // Create edges first (behind nodes)
+  // Create edges as tubes (LineBasicMaterial ignores linewidth in WebGL)
   edges.forEach(edge => {
     const from = nodes[edge.from];
     const to = nodes[edge.to];
     if (!from || !to) return;
 
-    const points = [
-      new THREE.Vector3(from.px, from.py, from.pz),
-      new THREE.Vector3(to.px, to.py, to.pz)
-    ];
-    const geo = new THREE.BufferGeometry().setFromPoints(points);
-    const mat = new THREE.LineBasicMaterial({
+    const vFrom = new THREE.Vector3(from.px, from.py, from.pz);
+    const vTo   = new THREE.Vector3(to.px,   to.py,   to.pz);
+    const curve  = new THREE.LineCurve3(vFrom, vTo);
+    // tube radius: 0.06 for normal edges, 0.12 for high-weight edges
+    const tubeR = 0.05 + edge.weight * 0.10;
+    const geo   = new THREE.TubeGeometry(curve, 1, tubeR, 5, false);
+    const opacity = 0.55 + edge.weight * 0.35;
+    const mat   = new THREE.MeshBasicMaterial({
       color: 0x90bce8,
       transparent: true,
-      opacity: 0.4 + edge.weight * 0.3
+      opacity
     });
-    const line = new THREE.Line(geo, mat);
-    line.userData = { edge, from, to };
-    scene.add(line);
-    edgeLines.push(line);
+    const tube = new THREE.Mesh(geo, mat);
+    tube.userData = { edge, from, to };
+    scene.add(tube);
+    edgeLines.push(tube);
   });
 
   // Create nodes
