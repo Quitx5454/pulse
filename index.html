@@ -15,803 +15,490 @@
   --navy:#1a3a6e;
   --text:#1a2a3a;
   --muted:#5a7a9a;
-  --lw:280px;
-  --rw:320px;
+  --lw:270px;
+  --rw:310px;
 }
 html,body{height:100%;overflow:hidden;}
 body{
-  background:var(--bg);
-  color:var(--text);
+  background:var(--bg);color:var(--text);
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  font-size:13px;
-  display:flex;
+  font-size:13px;display:flex;
 }
 body::before{
-  content:'';position:fixed;inset:0;
-  background-image:
-    linear-gradient(var(--grid) 1px,transparent 1px),
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
     linear-gradient(90deg,var(--grid) 1px,transparent 1px);
-  background-size:40px 40px;
-  opacity:.22;pointer-events:none;z-index:0;
+  background-size:40px 40px;opacity:.2;
 }
-
-/* ── SCROLLBARS ── */
-::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar{width:3px;}
 ::-webkit-scrollbar-thumb{background:var(--border);}
-::-webkit-scrollbar-track{background:transparent;}
 
-/* ── LEFT PANEL — Agent List ── */
+/* ── LEFT ── */
 #left{
-  width:var(--lw);min-width:var(--lw);
-  height:100vh;background:var(--panel);
-  border-right:1px solid var(--border);
-  display:flex;flex-direction:column;
-  z-index:10;position:relative;
+  width:var(--lw);min-width:var(--lw);height:100vh;
+  background:var(--panel);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;z-index:10;
 }
-.ph{padding:16px 16px 12px;border-bottom:1px solid var(--border);}
-.ph h1{font-size:20px;font-weight:700;color:var(--navy);letter-spacing:-.5px;}
-.ph p{font-size:11px;color:var(--muted);margin-top:2px;font-family:monospace;}
+.ph{padding:14px 14px 10px;border-bottom:1px solid var(--border);}
+.ph h1{font-size:19px;font-weight:700;color:var(--navy);}
+.ph p{font-size:10px;color:var(--muted);margin-top:2px;font-family:monospace;}
 
-.sec{padding:10px 16px;border-bottom:1px solid var(--border);}
-.sec-title{
-  font-size:10px;font-weight:600;color:var(--muted);
-  text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;
-}
+.sec{padding:8px 14px;border-bottom:1px solid var(--border);}
+.sec-title{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
 
 /* stats */
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
-.sbox{background:var(--bg);border:1px solid var(--border);padding:8px;}
-.sl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
-.sv{font-size:16px;font-weight:700;color:var(--navy);font-family:monospace;margin-top:1px;}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.sbox{background:var(--bg);border:1px solid var(--border);padding:7px;}
+.sl{font-size:9px;color:var(--muted);text-transform:uppercase;}
+.sv{font-size:15px;font-weight:700;color:var(--navy);font-family:monospace;margin-top:1px;}
 
 /* our agents */
-.our-card{
-  background:var(--bg);border:1px solid var(--accent);
-  padding:8px;margin-bottom:6px;
-}
+.our-card{background:var(--bg);border:1px solid var(--accent);padding:7px;margin-bottom:5px;}
 .our-card:last-child{margin-bottom:0;}
-.our-name{font-weight:700;color:var(--accent);font-size:12px;margin-bottom:5px;}
-.ep-row{
-  display:flex;align-items:center;gap:5px;
-  padding:3px 0;border-top:1px solid var(--border);
-}
+.our-name{font-weight:700;color:var(--accent);font-size:11px;margin-bottom:4px;}
+.ep-row{display:flex;align-items:center;gap:4px;padding:2px 0;border-top:1px solid var(--border);}
 .ep-path{font-family:monospace;font-size:9px;color:var(--navy);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;}
 .ep-price{font-size:9px;font-family:monospace;color:var(--accent);white-space:nowrap;}
-.copy-btn{
-  background:none;border:1px solid var(--border);
-  padding:1px 5px;font-size:8px;cursor:pointer;
-  color:var(--muted);font-family:monospace;
-}
-.copy-btn:hover{border-color:var(--accent);color:var(--accent);}
-.copy-btn.copied{border-color:#27ae60;color:#27ae60;}
-
-/* search */
-#agent-search{
-  width:100%;padding:6px 10px;
-  border:1px solid var(--border);background:var(--bg);
-  font-size:12px;color:var(--text);outline:none;
-  font-family:monospace;
-}
-#agent-search::placeholder{color:var(--muted);}
-#agent-search:focus{border-color:var(--accent);}
+.cp{background:none;border:1px solid var(--border);padding:1px 4px;font-size:8px;cursor:pointer;color:var(--muted);font-family:monospace;}
+.cp:hover{border-color:var(--accent);color:var(--accent);}
+.cp.ok{border-color:#27ae60;color:#27ae60;}
 
 /* agent list */
-#agent-list-wrap{flex:1;overflow-y:auto;padding:0;}
-.al-item{
-  display:flex;align-items:center;gap:8px;
-  padding:8px 16px;border-bottom:1px solid var(--border);
-  cursor:pointer;transition:background .12s;
+.al-search{
+  width:100%;padding:6px 10px;border:1px solid var(--border);
+  background:var(--bg);font-size:11px;color:var(--text);outline:none;
+  font-family:monospace;display:block;
 }
-.al-item:hover{background:var(--bg);}
-.al-item.selected{background:#e8f3fd;border-left:2px solid var(--accent);}
-.al-avatar{
-  width:28px;height:28px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:10px;font-weight:700;color:#fff;flex-shrink:0;
+.al-search:focus{border-color:var(--accent);}
+#agent-list{flex:1;overflow-y:auto;}
+.ali{
+  display:flex;align-items:center;gap:7px;padding:7px 14px;
+  border-bottom:1px solid var(--border);cursor:pointer;
 }
-.al-info{flex:1;min-width:0;}
-.al-name{font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.al-meta{font-size:10px;color:var(--muted);font-family:monospace;margin-top:1px;}
-.al-score{
-  font-size:10px;font-family:monospace;font-weight:700;
-  padding:2px 5px;
-}
-.score-hi{color:#27ae60;}
-.score-mid{color:var(--accent);}
-.score-lo{color:var(--muted);}
+.ali:hover,.ali.sel{background:var(--bg);}
+.ali.sel{border-left:2px solid var(--accent);}
+.av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0;}
+.an{font-weight:600;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.am{font-size:9px;color:var(--muted);font-family:monospace;margin-top:1px;}
+.asc{font-size:10px;font-family:monospace;font-weight:700;flex-shrink:0;}
+.g{color:#27ae60;}.b{color:var(--accent);}.gr{color:var(--muted);}
 
-/* ── CENTER — Live Feed ── */
-#center{
-  flex:1;height:100vh;
-  display:flex;flex-direction:column;
-  position:relative;overflow:hidden;
-  z-index:5;
-}
-#feed-header{
+/* ── CENTER ── */
+#center{flex:1;height:100vh;display:flex;flex-direction:column;z-index:5;}
+#feed-hdr{
   background:var(--panel);border-bottom:1px solid var(--border);
-  padding:12px 20px;display:flex;align-items:center;gap:12px;
-  flex-shrink:0;
+  padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;
 }
-#feed-header h2{font-size:14px;font-weight:700;color:var(--navy);}
-.live-pill{
-  display:flex;align-items:center;gap:5px;
-  background:var(--bg);border:1px solid var(--border);
-  padding:3px 8px;font-size:10px;font-weight:600;
-  font-family:monospace;color:var(--navy);
-}
-.ldot{
-  width:6px;height:6px;border-radius:50%;background:var(--accent);
-  animation:blink 1.4s ease-in-out infinite;
-}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-#refresh-info{
-  font-size:10px;color:var(--muted);font-family:monospace;margin-left:auto;
-}
+#feed-hdr h2{font-size:13px;font-weight:700;color:var(--navy);}
+.lp{display:flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--border);padding:3px 7px;font-size:10px;font-weight:600;font-family:monospace;color:var(--navy);}
+.ld{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:blink 1.4s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+#ref-info{font-size:10px;color:var(--muted);font-family:monospace;margin-left:auto;}
 
-#feed-wrap{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:10px;}
-
-/* feed card */
+#feed{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:8px;}
 .fc{
-  background:var(--panel);border:1px solid var(--border);
-  padding:12px 14px;
-  animation:slideIn .3s ease;
-  cursor:pointer;
+  background:var(--panel);border:1px solid var(--border);padding:10px 12px;
+  cursor:pointer;transition:border-color .1s;
 }
-.fc:hover{border-color:var(--accent);background:#f5faff;}
-@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
-
-.fc-top{display:flex;align-items:flex-start;gap:10px;}
-.fc-avatar{
-  width:36px;height:36px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:12px;font-weight:700;color:#fff;flex-shrink:0;margin-top:1px;
-}
+.fc:hover{border-color:var(--accent);}
+.fc-new{animation:drop .25s ease;}
+@keyframes drop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.fc-top{display:flex;gap:8px;}
 .fc-body{flex:1;min-width:0;}
-.fc-name{font-weight:700;font-size:13px;color:var(--navy);}
-.fc-endpoint{font-size:10px;font-family:monospace;color:var(--muted);margin-top:1px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.fc-row{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap;}
-.tag{
-  font-size:10px;font-family:monospace;padding:2px 6px;
-  background:var(--bg);border:1px solid var(--border);color:var(--muted);
-}
-.tag.score-hi{border-color:#27ae60;color:#27ae60;background:#f0fff4;}
-.tag.score-mid{border-color:var(--accent);color:var(--accent);background:#eff7ff;}
-.fc-meta{font-size:10px;color:var(--muted);margin-top:6px;font-family:monospace;}
-.fc-user{
-  display:inline-block;background:var(--bg);border:1px solid var(--border);
-  padding:1px 5px;font-family:monospace;font-size:10px;color:var(--navy);
-}
-.fc-tx{
-  font-family:monospace;font-size:10px;color:var(--accent);
-  text-decoration:none;
-}
-.fc-tx:hover{text-decoration:underline;}
-.fc-time{color:var(--muted);font-size:10px;font-family:monospace;}
+.fc-name{font-weight:700;font-size:12px;color:var(--navy);}
+.fc-ep{font-size:10px;font-family:monospace;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fc-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;}
+.tag{font-size:9px;font-family:monospace;padding:1px 5px;background:var(--bg);border:1px solid var(--border);color:var(--muted);}
+.tg{border-color:#27ae60;color:#27ae60;background:#f0fff4;}
+.tb{border-color:var(--accent);color:var(--accent);background:#eff7ff;}
+.fc-foot{margin-top:5px;font-size:10px;font-family:monospace;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;}
+.fc-foot a{color:var(--accent);text-decoration:none;}
+.fc-foot a:hover{text-decoration:underline;}
+.empty{text-align:center;padding:50px 20px;color:var(--muted);font-family:monospace;font-size:11px;}
 
-.feed-empty{
-  text-align:center;padding:60px 20px;
-  color:var(--muted);font-family:monospace;font-size:12px;
-}
-
-/* loading skeleton */
-.skeleton{
-  background:linear-gradient(90deg,var(--border) 25%,var(--bg) 50%,var(--border) 75%);
-  background-size:200% 100%;
-  animation:shimmer 1.5s infinite;
-  height:12px;margin:4px 0;
-}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-
-/* ── RIGHT PANEL — Agent Detail ── */
+/* ── RIGHT ── */
 #right{
-  width:0;min-width:0;height:100vh;
-  background:var(--panel);border-left:1px solid var(--border);
-  overflow:hidden;transition:width .22s ease,min-width .22s ease;
-  z-index:10;display:flex;flex-direction:column;
+  width:0;min-width:0;height:100vh;background:var(--panel);
+  border-left:1px solid var(--border);overflow:hidden;
+  transition:width .2s,min-width .2s;z-index:10;
 }
 #right.open{width:var(--rw);min-width:var(--rw);}
-#right-inner{width:var(--rw);overflow-y:auto;height:100%;}
-
-.rp-head{
-  padding:14px 16px 10px;border-bottom:1px solid var(--border);
-  position:sticky;top:0;background:var(--panel);z-index:2;
-}
-.rp-close{
-  float:right;background:none;border:none;
-  font-size:16px;cursor:pointer;color:var(--muted);line-height:1;
-}
-.rp-close:hover{color:var(--text);}
-.rp-avatar-row{display:flex;align-items:center;gap:10px;margin-top:8px;clear:both;}
-.rp-avatar{
-  width:44px;height:44px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:16px;font-weight:700;color:#fff;flex-shrink:0;
-}
-.rp-name{font-size:17px;font-weight:700;color:var(--navy);}
-.rp-desc{font-size:11px;color:var(--muted);line-height:1.5;margin-top:3px;}
-
-.rp-sec{padding:10px 16px;border-bottom:1px solid var(--border);}
-.rp-field{display:flex;justify-content:space-between;align-items:center;padding:4px 0;}
-.rfl{color:var(--muted);font-size:11px;}
-.rfv{font-weight:600;font-size:11px;font-family:monospace;}
-
-.invoke-btn{
-  display:block;margin:12px 16px;padding:9px;
-  background:var(--accent);color:#fff;border:none;
-  font-size:12px;font-weight:700;cursor:pointer;
-  text-align:center;text-decoration:none;font-family:monospace;
-}
-.invoke-btn:hover{background:var(--navy);}
-
-.rp-tx-item{
-  padding:6px 0;border-bottom:1px solid var(--border);font-size:11px;
-}
-.rp-tx-item:last-child{border-bottom:none;}
+#ri{width:var(--rw);overflow-y:auto;height:100%;}
+.rh{padding:12px 14px 8px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--panel);z-index:2;}
+.rc{float:right;background:none;border:none;font-size:15px;cursor:pointer;color:var(--muted);}
+.rc:hover{color:var(--text);}
+.rar{display:flex;align-items:center;gap:8px;margin-top:6px;clear:both;}
+.rav{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;}
+.rn{font-size:16px;font-weight:700;color:var(--navy);}
+.rd{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4;}
+.rs{padding:8px 14px;border-bottom:1px solid var(--border);}
+.rf{display:flex;justify-content:space-between;align-items:center;padding:3px 0;}
+.rl{color:var(--muted);font-size:10px;}
+.rv{font-weight:600;font-size:10px;font-family:monospace;}
+.inv{display:block;margin:10px 14px;padding:8px;background:var(--accent);color:#fff;border:none;font-size:11px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;font-family:monospace;}
+.inv:hover{background:var(--navy);}
+.rx{padding:8px 14px;}
+.rxi{padding:5px 0;border-bottom:1px solid var(--border);font-size:10px;}
+.rxi:last-child{border-bottom:none;}
 </style>
 </head>
 <body>
 
-<!-- ══ LEFT PANEL ══ -->
+<!-- LEFT -->
 <div id="left">
   <div class="ph">
     <h1>Pulse</h1>
-    <p>live agent economy · xgate.run</p>
+    <p>live agent economy · 8004scan</p>
   </div>
-
-  <!-- Stats -->
   <div class="sec">
     <div class="sec-title">Network</div>
     <div class="stats">
-      <div class="sbox"><div class="sl">Agents</div><div class="sv" id="st-agents">—</div></div>
-      <div class="sbox"><div class="sl">Feedbacks</div><div class="sv" id="st-txns">—</div></div>
+      <div class="sbox"><div class="sl">Active Agents</div><div class="sv" id="st-agents">—</div></div>
+      <div class="sbox"><div class="sl">Total Feedbacks</div><div class="sv" id="st-txns">—</div></div>
     </div>
   </div>
-
-  <!-- Our Agents -->
   <div class="sec">
     <div class="sec-title">Our Agents</div>
     <div class="our-card">
       <div class="our-name">Distill</div>
-      <div style="font-size:9px;color:var(--muted);margin-bottom:5px;">distill-agent-production.up.railway.app</div>
+      <div style="font-size:9px;color:var(--muted);margin-bottom:4px;">distill-agent-production.up.railway.app</div>
       <div class="ep-row">
-        <div style="flex:1;min-width:0;">
-          <div class="ep-path">/entrypoints/process/invoke</div>
-          <div style="font-size:9px;color:var(--muted);">blockchain data cleaning</div>
-        </div>
+        <div style="flex:1;min-width:0;"><div class="ep-path">/entrypoints/process/invoke</div><div style="font-size:8px;color:var(--muted);">blockchain data cleaning</div></div>
         <span class="ep-price">0.02 USDC</span>
-        <button class="copy-btn" onclick="copyUrl(this,'https://distill-agent-production.up.railway.app/entrypoints/process/invoke')">copy</button>
+        <button class="cp" onclick="cp(this,'https://distill-agent-production.up.railway.app/entrypoints/process/invoke')">copy</button>
       </div>
     </div>
     <div class="our-card">
       <div class="our-name">Parse</div>
-      <div style="font-size:9px;color:var(--muted);margin-bottom:5px;">parse-agent-production.up.railway.app</div>
+      <div style="font-size:9px;color:var(--muted);margin-bottom:4px;">parse-agent-production.up.railway.app</div>
       <div class="ep-row">
-        <div style="flex:1;min-width:0;"><div class="ep-path">/entrypoints/product/invoke</div><div style="font-size:9px;color:var(--muted);">HTML → JSON</div></div>
+        <div style="flex:1;min-width:0;"><div class="ep-path">/entrypoints/product/invoke</div><div style="font-size:8px;color:var(--muted);">HTML→JSON</div></div>
         <span class="ep-price">0.01</span>
-        <button class="copy-btn" onclick="copyUrl(this,'https://parse-agent-production.up.railway.app/entrypoints/product/invoke')">copy</button>
+        <button class="cp" onclick="cp(this,'https://parse-agent-production.up.railway.app/entrypoints/product/invoke')">copy</button>
       </div>
       <div class="ep-row">
-        <div style="flex:1;min-width:0;"><div class="ep-path">/entrypoints/serp/invoke</div><div style="font-size:9px;color:var(--muted);">SERP → JSON</div></div>
+        <div style="flex:1;min-width:0;"><div class="ep-path">/entrypoints/serp/invoke</div><div style="font-size:8px;color:var(--muted);">SERP→JSON</div></div>
         <span class="ep-price">0.01</span>
-        <button class="copy-btn" onclick="copyUrl(this,'https://parse-agent-production.up.railway.app/entrypoints/serp/invoke')">copy</button>
+        <button class="cp" onclick="cp(this,'https://parse-agent-production.up.railway.app/entrypoints/serp/invoke')">copy</button>
       </div>
       <div class="ep-row">
-        <div style="flex:1;min-width:0;"><div class="ep-path">/entrypoints/entity/invoke</div><div style="font-size:9px;color:var(--muted);">text → entities</div></div>
+        <div style="flex:1;min-width:0;"><div class="ep-path">/entrypoints/entity/invoke</div><div style="font-size:8px;color:var(--muted);">text→entities</div></div>
         <span class="ep-price">0.01</span>
-        <button class="copy-btn" onclick="copyUrl(this,'https://parse-agent-production.up.railway.app/entrypoints/entity/invoke')">copy</button>
+        <button class="cp" onclick="cp(this,'https://parse-agent-production.up.railway.app/entrypoints/entity/invoke')">copy</button>
       </div>
     </div>
   </div>
-
-  <!-- Agent Search + List -->
-  <div class="sec" style="padding-bottom:6px;">
-    <div class="sec-title">xgate Agents <span id="agent-count" style="font-weight:400;font-size:9px;"></span></div>
-    <input id="agent-search" type="text" placeholder="search agents…" oninput="filterAgents(this.value)">
+  <div class="sec" style="padding-bottom:4px;">
+    <div class="sec-title">Agents <span id="ag-count" style="font-weight:400"></span></div>
+    <input class="al-search" type="text" placeholder="search…" oninput="filterList(this.value)">
   </div>
-  <div id="agent-list-wrap">
-    <div style="padding:16px;text-align:center;color:var(--muted);font-size:11px;font-family:monospace;">Loading agents…</div>
-  </div>
+  <div id="agent-list"><div class="empty" style="padding:20px;">Loading…</div></div>
 </div>
 
-<!-- ══ CENTER — Live Feed ══ -->
+<!-- CENTER -->
 <div id="center">
-  <div id="feed-header">
+  <div id="feed-hdr">
     <h2>Live Activity</h2>
-    <div class="live-pill"><span class="ldot"></span>LIVE</div>
-    <div id="refresh-info">Refreshes every 15s · <span id="next-refresh">15s</span></div>
+    <div class="lp"><span class="ld"></span>LIVE</div>
+    <div id="ref-info">refreshes every 15s · next: <span id="nxt">15s</span></div>
   </div>
-  <div id="feed-wrap">
-    <div class="feed-empty" id="feed-loading">Loading transactions…</div>
-  </div>
+  <div id="feed"><div class="empty" id="feed-init">Loading…</div></div>
 </div>
 
-<!-- ══ RIGHT PANEL — Detail ══ -->
+<!-- RIGHT -->
 <div id="right">
-  <div id="right-inner">
-    <div class="rp-head">
-      <button class="rp-close" onclick="closeDetail()">✕</button>
-      <div class="rp-avatar-row">
-        <div class="rp-avatar" id="rp-av"></div>
+  <div id="ri">
+    <div class="rh">
+      <button class="rc" onclick="closeDetail()">✕</button>
+      <div class="rar">
+        <div class="rav" id="rp-av"></div>
         <div>
-          <div class="rp-name" id="rp-name">—</div>
-          <div class="rp-desc" id="rp-desc">—</div>
+          <div class="rn" id="rp-name"></div>
+          <div class="rd" id="rp-desc"></div>
         </div>
       </div>
     </div>
-    <div class="rp-sec">
-      <div class="rp-field"><span class="rfl">Network</span><span class="rfv" id="rp-net">—</span></div>
-      <div class="rp-field"><span class="rfl">Chain ID</span><span class="rfv" id="rp-chain">—</span></div>
-      <div class="rp-field"><span class="rfl">Reputation</span><span class="rfv" id="rp-rep">—</span></div>
-      <div class="rp-field"><span class="rfl">Rank Score</span><span class="rfv" id="rp-rank">—</span></div>
-      <div class="rp-field"><span class="rfl">x402 Support</span><span class="rfv" id="rp-x402">—</span></div>
-      <div class="rp-field"><span class="rfl">Last Updated</span><span class="rfv" id="rp-updated">—</span></div>
+    <div class="rs">
+      <div class="rf"><span class="rl">Chain</span><span class="rv" id="rp-chain">—</span></div>
+      <div class="rf"><span class="rl">Latest Score</span><span class="rv" id="rp-score">—</span></div>
+      <div class="rf"><span class="rl">Feedbacks seen</span><span class="rv" id="rp-fbc">—</span></div>
+      <div class="rf"><span class="rl">Last activity</span><span class="rv" id="rp-last">—</span></div>
     </div>
-    <div class="rp-sec" id="rp-ep-sec" style="display:none;">
-      <div class="sec-title">Endpoints</div>
-      <div id="rp-eps"></div>
-    </div>
-    <a class="invoke-btn" id="rp-invoke" href="#" target="_blank" style="display:none;">Invoke Agent →</a>
-    <div class="rp-sec">
-      <div class="sec-title">Recent Feedbacks</div>
-      <div id="rp-txs"><div style="color:var(--muted);font-size:11px;padding:4px 0;">No feedback data</div></div>
+    <a class="inv" id="rp-inv" href="#" target="_blank" style="display:none">Invoke →</a>
+    <div class="rx">
+      <div class="sec-title" style="margin-bottom:6px;">Recent Feedbacks</div>
+      <div id="rp-fbs"><div style="color:var(--muted);font-size:10px;">Select an agent</div></div>
     </div>
   </div>
 </div>
 
 <script>
-// ══════════════════════════════════════════════════
-// PULSE — Live Agent Economy
-// Refresh: feed every 15s, agents every 120s
-// ══════════════════════════════════════════════════
-
-// ── OUR AGENTS ───────────────────────────────────
-const OUR_AGENTS = [
-  {
-    id:'distill', name:'Distill',
-    host:'distill-agent-production.up.railway.app',
-    description:'Blockchain data cleaning & normalization',
-    network:'Base', chainId:8453, reputationScore:95, rankScore:95,
-    x402:true,
-    endpoints:[{path:'/entrypoints/process/invoke',price:'0.02 USDC',desc:'blockchain data cleaning'}]
-  },
-  {
-    id:'parse', name:'Parse',
-    host:'parse-agent-production.up.railway.app',
-    description:'Structured data extraction from web content',
-    network:'Base', chainId:8453, reputationScore:92, rankScore:92,
-    x402:true,
-    endpoints:[
-      {path:'/entrypoints/product/invoke',price:'0.01 USDC',desc:'HTML → JSON'},
-      {path:'/entrypoints/serp/invoke',   price:'0.01 USDC',desc:'SERP → JSON'},
-      {path:'/entrypoints/entity/invoke', price:'0.01 USDC',desc:'text → entities'},
-    ]
-  }
+// ── OUR AGENTS (hardcoded, always shown) ─────────
+const OUR = [
+  {id:'distill',name:'Distill',chain:'Base',chainId:8453,
+   desc:'Blockchain data cleaning & normalization',
+   endpoints:[{p:'/entrypoints/process/invoke',pr:'0.02 USDC',d:'blockchain data cleaning',
+               host:'distill-agent-production.up.railway.app'}]},
+  {id:'parse',name:'Parse',chain:'Base',chainId:8453,
+   desc:'Structured data extraction from web content',
+   endpoints:[{p:'/entrypoints/product/invoke',pr:'0.01 USDC',d:'HTML→JSON',host:'parse-agent-production.up.railway.app'},
+              {p:'/entrypoints/serp/invoke',pr:'0.01 USDC',d:'SERP→JSON',host:'parse-agent-production.up.railway.app'},
+              {p:'/entrypoints/entity/invoke',pr:'0.01 USDC',d:'text→entities',host:'parse-agent-production.up.railway.app'}]}
 ];
 
 // ── STATE ────────────────────────────────────────
-let xgateAgents  = [];         // all fetched xgate agents
-let filteredList = [];         // after search
-let feedItems    = [];         // rendered feed cards
-let agentById    = {};         // id → agent
-let seenFeedIds  = new Set();  // deduplicate feed
-let selectedAgent = null;
-let nextRefreshSec = 15;
-let refreshTimer = null;
-
-// ── HTTP CACHE ───────────────────────────────────
-const httpCache = {};
-async function apiFetch(url, ttl = 12000) {
-  const now = Date.now();
-  if (httpCache[url] && now - httpCache[url].ts < ttl) return httpCache[url].data;
-  try {
-    const r = await fetch(url, { signal: AbortSignal.timeout(9000) });
-    if (!r.ok) throw new Error(r.status);
-    const data = await r.json();
-    httpCache[url] = { data, ts: now };
-    return data;
-  } catch(e) {
-    console.warn('fetch error', url, e.message);
-    return null;
-  }
-}
+const agentMap  = {};   // agent_id (UUID) → {id,name,chainId,feedbacks:[],score,lastAt}
+let   agentList = [];   // ordered by activity
+let   filteredAgents = [];
+let   seenIds   = new Set();
+let   allFeedbacks = [];   // all loaded feedbacks (newest first)
+let   countdown = 15;
+let   selectedId = null;
 
 // ── COLORS ───────────────────────────────────────
-const PALETTE = [
-  '#1a5fa8','#2980d9','#1e3a6e','#27ae60','#8e44ad',
-  '#2c3e50','#16a085','#c0392b','#d35400','#7f8c8d'
-];
-function agentColor(name) {
-  let h = 0;
-  for (const c of (name||'?')) h = (h*31 + c.charCodeAt(0)) & 0xffff;
-  return PALETTE[h % PALETTE.length];
-}
-function initials(name) {
-  if (!name) return '?';
-  const w = name.trim().split(/\s+/);
-  return w.length >= 2
-    ? (w[0][0]+w[1][0]).toUpperCase()
-    : name.slice(0,2).toUpperCase();
-}
-function chainName(id) {
-  return {8453:'Base',1:'Ethereum',137:'Polygon',100:'Gnosis',
-          56:'BSC',42161:'Arbitrum',10:'Optimism'}[id] || `Chain ${id}`;
+const PAL = ['#1a5fa8','#2980d9','#1e3a6e','#27ae60','#8e44ad','#16a085','#c0392b','#d35400','#2c3e50','#7f8c8d'];
+function color(s){ let h=0; for(const c of (s||'?')) h=(h*31+c.charCodeAt(0))&0xffff; return PAL[h%PAL.length]; }
+function ini(s){ if(!s) return '?'; const w=s.trim().split(/\s+/); return (w.length>=2?w[0][0]+w[1][0]:s.slice(0,2)).toUpperCase(); }
+function chainName(id){ return {8453:'Base',1:'Ethereum',137:'Polygon',100:'Gnosis',56:'BSC',42161:'Arbitrum',10:'Optimism'}[id]||`Chain ${id}`; }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function ago(ts){
+  if(!ts) return '';
+  const d=(Date.now()-new Date(ts).getTime())/1000;
+  if(d<60) return Math.floor(d)+'s ago';
+  if(d<3600) return Math.floor(d/60)+'m ago';
+  if(d<86400) return Math.floor(d/3600)+'h ago';
+  return Math.floor(d/86400)+'d ago';
 }
 
-// ── XGATE AGENT DECODER ──────────────────────────
-function decodeXgate(raw) {
-  let name = raw.name || null;
-  let description = '';
-  let x402 = false;
-  const uri = raw.tokenUri || '';
-  if (uri.startsWith('data:application/json;base64,')) {
-    try {
-      const m = JSON.parse(atob(uri.split(',',1)[1].replace(/\s/g,'')+
-        '=='.slice(0,(4-uri.split(',',1)[1].replace(/\s/g,'').length%4)%4)));
-      // fix: just use plain atob
-      const meta = JSON.parse(atob(uri.split(',')[1]));
-      name = name || meta.name;
-      description = meta.description || '';
-      x402 = meta.x402Support || false;
-    } catch(e) {
-      try {
-        const meta = JSON.parse(atob(uri.split(',')[1]));
-        name = name || meta.name;
-        description = meta.description || '';
-        x402 = meta.x402Support || false;
-      } catch(e2){}
+// ── FETCH (no cache for feed, cached for static) ─
+async function GET(url, cache=true) {
+  if(cache && GET._c && GET._c[url] && Date.now()-GET._c[url].t<60000) return GET._c[url].d;
+  try {
+    const r = await fetch(url, {signal: AbortSignal.timeout(10000)});
+    if(!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    if(cache){ GET._c=GET._c||{}; GET._c[url]={d,t:Date.now()}; }
+    return d;
+  } catch(e) { console.warn('GET',url,e.message); return null; }
+}
+
+// ── INGEST FEEDBACKS ─────────────────────────────
+function ingest(fbs) {
+  let added = 0;
+  for (const fb of fbs) {
+    if (!fb.id || seenIds.has(fb.id)) continue;
+    seenIds.add(fb.id);
+    allFeedbacks.unshift(fb);
+    added++;
+
+    // update agent map
+    const id = fb.agent_id;
+    if (!id) continue;
+    const name = fb.agent?.name || `Agent ${id.slice(0,8)}`;
+    if (!agentMap[id]) {
+      agentMap[id] = {id, name, chainId: fb.chain_id, feedbacks:[], score:0, lastAt:null};
     }
+    const a = agentMap[id];
+    a.feedbacks.unshift(fb);
+    a.score   = fb.score;
+    a.lastAt  = fb.submitted_at || fb.created_at;
   }
-  return {
-    id: String(raw.agentId || raw.agentKey),
-    name: name || `Agent #${raw.agentId}`,
-    description,
-    reputationScore: raw.reputationScore || 0,
-    rankScore: Math.round(raw.rankScore || 0),
-    chainId: raw.chainId,
-    network: chainName(raw.chainId),
-    x402,
-    wallet: raw.wallet,
-    lastUpdatedAt: raw.lastUpdatedAt,
-    endpoints: [],
-    isOurs: false,
-    _raw: raw,
-  };
+  // keep allFeedbacks bounded
+  if (allFeedbacks.length > 200) allFeedbacks.length = 200;
+  if (added > 0) rebuildAgentList();
+  return added;
 }
 
-// ── LOAD XGATE AGENTS ────────────────────────────
-// Max limit=50, paginate until empty — actual total ~200
-async function loadXgateAgents() {
-  const all = [];
-  for (let offset = 0; offset <= 200; offset += 50) {
-    const raw = await apiFetch(
-      `https://api.xgate.run/agents?limit=50&offset=${offset}`,
-      120000  // cache 2 min
-    );
-    const results = raw?.results || [];
-    if (!results.length) break;
-    results.forEach(r => all.push(decodeXgate(r)));
-    if (results.length < 50) break;
-    // small delay to be polite (not rate-limit xgate)
-    await new Promise(r => setTimeout(r, 400));
-  }
-  return all;
+function rebuildAgentList() {
+  agentList = Object.values(agentMap).sort((a,b) => new Date(b.lastAt)-new Date(a.lastAt));
+  filteredAgents = agentList;
+  document.getElementById('ag-count').textContent = `(${agentList.length})`;
+  renderList(filteredAgents);
 }
 
-// ── LOAD FEEDBACKS ────────────────────────────────
-async function loadFeedbacks(limit = 30) {
-  const raw = await apiFetch(
-    `https://8004scan.io/api/v1/public/feedbacks?limit=${limit}`,
-    0  // always fresh
-  );
-  return raw?.data || [];
-}
-
-// ── LOAD STATS ────────────────────────────────────
-async function loadStats() {
-  const raw = await apiFetch('https://8004scan.io/api/v1/public/feedbacks?limit=1', 60000);
-  return {
-    feedbackTotal: raw?.meta?.pagination?.total || 0
-  };
-}
-
-// ── AGENT LIST ────────────────────────────────────
-function renderAgentList(list) {
-  const wrap = document.getElementById('agent-list-wrap');
-  if (!list.length) {
-    wrap.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:11px;">No agents found</div>';
-    return;
-  }
-  wrap.innerHTML = list.map(a => {
-    const sc = a.reputationScore;
-    const scClass = sc >= 80 ? 'score-hi' : sc >= 50 ? 'score-mid' : 'score-lo';
-    const col = agentColor(a.name);
-    return `
-      <div class="al-item ${selectedAgent?.id === a.id ? 'selected':''}"
-           onclick="openDetail('${a.id}')">
-        <div class="al-avatar" style="background:${col}">${initials(a.name)}</div>
-        <div class="al-info">
-          <div class="al-name">${esc(a.name)}</div>
-          <div class="al-meta">${a.network} · #${a.id}</div>
-        </div>
-        <div class="al-score ${scClass}">${sc}</div>
-      </div>`;
+// ── RENDER AGENT LIST ─────────────────────────────
+function renderList(list) {
+  const wrap = document.getElementById('agent-list');
+  if (!list.length) { wrap.innerHTML = '<div class="empty" style="padding:20px">No agents yet</div>'; return; }
+  wrap.innerHTML = list.slice(0,80).map(a => {
+    const sc=a.score||0, cls=sc>=80?'g':sc>=50?'b':'gr';
+    const col=color(a.name);
+    return `<div class="ali${selectedId===a.id?' sel':''}" onclick="openDetail('${esc(a.id)}')">
+      <div class="av" style="background:${col}">${ini(a.name)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="an">${esc(a.name)}</div>
+        <div class="am">${chainName(a.chainId)} · ${ago(a.lastAt)}</div>
+      </div>
+      <div class="asc ${cls}">${sc}</div>
+    </div>`;
   }).join('');
 }
 
-function filterAgents(q) {
-  q = q.toLowerCase().trim();
-  filteredList = q
-    ? xgateAgents.filter(a => a.name.toLowerCase().includes(q) || String(a.id).includes(q))
-    : xgateAgents;
-  renderAgentList(filteredList);
+function filterList(q) {
+  q=q.toLowerCase().trim();
+  filteredAgents = q ? agentList.filter(a=>a.name.toLowerCase().includes(q)||a.id.includes(q)) : agentList;
+  renderList(filteredAgents);
 }
 
-// ── LIVE FEED ─────────────────────────────────────
-function scoreTag(score) {
-  const s = Number(score);
-  if (s >= 80) return `<span class="tag score-hi">score ${s}</span>`;
-  if (s >= 50) return `<span class="tag score-mid">score ${s}</span>`;
-  return `<span class="tag">score ${s}</span>`;
-}
+// ── RENDER FEED ───────────────────────────────────
+function renderFeedCard(fb, isNew=false) {
+  const name   = fb.agent?.name || `Agent ${(fb.agent_id||'').slice(0,8)}`;
+  const col    = color(name);
+  const sc     = fb.score||0;
+  const scCls  = sc>=80?'tg':sc>=50?'tb':'';
+  const chain  = fb.chain_id===8453?'Base':fb.chain_id?`Chain ${fb.chain_id}`:'';
+  const host   = fb.endpoint ? (()=>{try{return new URL(fb.endpoint).hostname}catch(e){return fb.endpoint}})() : '';
+  const tx     = fb.transaction_hash||'';
+  const txS    = tx ? tx.slice(0,8)+'…'+tx.slice(-6) : '';
+  const base   = fb.chain_id===8453?'https://basescan.org/tx/':'https://etherscan.io/tx/';
+  const user   = fb.user_address ? fb.user_address.slice(0,6)+'…'+fb.user_address.slice(-4) : '';
+  const agId   = fb.agent_id||'';
 
-function renderFeedItem(fb) {
-  const agentName = fb.agent?.name || `Agent ${fb.agent_id?.slice(0,8)}`;
-  const col = agentColor(agentName);
-  const ini = initials(agentName);
-  const host = fb.endpoint ? (() => { try { return new URL(fb.endpoint).hostname; } catch(e){ return fb.endpoint; }})() : '';
-  const txHash = fb.transaction_hash || '';
-  const txShort = txHash ? txHash.slice(0,8)+'…'+txHash.slice(-6) : '';
-  const userShort = fb.user_address ? fb.user_address.slice(0,6)+'…'+fb.user_address.slice(-4) : '?';
-  const chain = fb.chain_id === 8453 ? 'Base' : fb.chain_id ? `Chain ${fb.chain_id}` : '';
-  const t = timeAgo(fb.submitted_at || fb.created_at);
-  const baseUrl = fb.chain_id === 8453 ? 'https://basescan.org/tx/' : 'https://etherscan.io/tx/';
-  const agId = fb.agent_id || '';
-
-  return `
-<div class="fc" onclick="openDetailByAgentId('${esc(agId)}','${esc(agentName)}')">
-  <div class="fc-top">
-    <div class="fc-avatar" style="background:${col}">${ini}</div>
-    <div class="fc-body">
-      <div class="fc-name">${esc(agentName)}</div>
-      ${host ? `<div class="fc-endpoint">${esc(host)}</div>` : ''}
-      <div class="fc-row">
-        ${scoreTag(fb.score)}
-        ${fb.tag1 ? `<span class="tag">${esc(fb.tag1)}</span>` : ''}
-        ${fb.tag2 ? `<span class="tag">${esc(fb.tag2)}</span>` : ''}
-        ${chain ? `<span class="tag">${chain}</span>` : ''}
+  const div = document.createElement('div');
+  div.className = 'fc' + (isNew?' fc-new':'');
+  div.onclick = () => openDetail(agId);
+  div.innerHTML = `
+    <div class="fc-top">
+      <div class="av" style="background:${col};width:32px;height:32px;font-size:11px;flex-shrink:0;">${ini(name)}</div>
+      <div class="fc-body">
+        <div class="fc-name">${esc(name)}</div>
+        ${host?`<div class="fc-ep">${esc(host)}</div>`:''}
+        <div class="fc-tags">
+          <span class="tag ${scCls}">score ${sc}</span>
+          ${fb.tag1?`<span class="tag">${esc(fb.tag1)}</span>`:''}
+          ${fb.tag2?`<span class="tag">${esc(fb.tag2)}</span>`:''}
+          ${chain?`<span class="tag">${chain}</span>`:''}
+        </div>
+        <div class="fc-foot">
+          ${user?`<span>from <b style="color:var(--navy)">${user}</b></span>`:''}
+          ${tx?`<a href="${base}${tx}" target="_blank" onclick="event.stopPropagation()">${txS}</a>`:''}
+          <span style="margin-left:auto">${ago(fb.submitted_at||fb.created_at)}</span>
+        </div>
       </div>
-      <div class="fc-meta">
-        <span class="fc-user">${userShort}</span>
-        ${txHash
-          ? ` → <a class="fc-tx" href="${baseUrl}${txHash}" target="_blank" onclick="event.stopPropagation()">${txShort}</a>`
-          : ''}
-        <span class="fc-time" style="float:right">${t}</span>
-      </div>
-    </div>
-  </div>
-</div>`;
+    </div>`;
+  return div;
 }
 
-async function refreshFeed() {
-  const feedbacks = await loadFeedbacks(30);
-  if (!feedbacks.length) return;
+function prependCards(fbs) {
+  const feed = document.getElementById('feed');
+  const init = document.getElementById('feed-init');
+  if (init) init.remove();
 
-  const wrap = document.getElementById('feed-wrap');
-  const loadingEl = document.getElementById('feed-loading');
-  if (loadingEl) loadingEl.remove();
-
-  // prepend new items
-  let newCount = 0;
-  const fragment = document.createDocumentFragment();
-  for (const fb of feedbacks) {
-    const uid = fb.id || fb.feedback_id || Math.random();
-    if (seenFeedIds.has(uid)) continue;
-    seenFeedIds.add(uid);
-    const div = document.createElement('div');
-    div.innerHTML = renderFeedItem(fb);
-    fragment.appendChild(div.firstElementChild);
-    newCount++;
+  for (const fb of [...fbs].reverse()) {
+    feed.insertBefore(renderFeedCard(fb, true), feed.firstChild);
   }
-  if (newCount > 0) {
-    wrap.insertBefore(fragment, wrap.firstChild);
-    // trim to 80 items max
-    while (wrap.children.length > 80) wrap.removeChild(wrap.lastChild);
-  }
+  // keep DOM bounded
+  while (feed.children.length > 100) feed.removeChild(feed.lastChild);
 }
 
 // ── DETAIL PANEL ─────────────────────────────────
-async function openDetail(agentId) {
-  const agent = agentById[agentId];
-  if (!agent) return;
-  _showDetail(agent);
-  // fetch feedbacks for this agent
-  const raw = await apiFetch(
-    `https://8004scan.io/api/v1/public/feedbacks?agent_id=${agentId}&limit=10`,
-    30000
-  );
-  const fbs = raw?.data || [];
-  renderDetailTxs(fbs);
-}
+function openDetail(agentId) {
+  selectedId = agentId;
+  const a = agentMap[agentId];
+  if (!a) return;
 
-async function openDetailByAgentId(agentId, agentName) {
-  // try from xgate list first
-  let agent = agentById[agentId];
-  if (!agent) {
-    // create minimal agent object from feed data
-    agent = {
-      id: agentId, name: agentName,
-      description: '', reputationScore: 0, rankScore: 0,
-      network: 'Base', chainId: 8453, x402: false,
-      endpoints: [], isOurs: false,
-    };
-  }
-  _showDetail(agent);
-  const raw = await apiFetch(
-    `https://8004scan.io/api/v1/public/feedbacks?agent_id=${agentId}&limit=10`,
-    30000
-  );
-  const fbs = raw?.data || [];
-  renderDetailTxs(fbs);
-}
-
-function _showDetail(agent) {
-  selectedAgent = agent;
-  const col = agentColor(agent.name);
-  document.getElementById('rp-av').textContent    = initials(agent.name);
+  const col = color(a.name);
+  document.getElementById('rp-av').textContent  = ini(a.name);
   document.getElementById('rp-av').style.background = col;
-  document.getElementById('rp-name').textContent  = agent.name;
-  document.getElementById('rp-desc').textContent  = agent.description || '—';
-  document.getElementById('rp-net').textContent   = agent.network || '—';
-  document.getElementById('rp-chain').textContent = agent.chainId ? `${agent.chainId}` : '—';
-  document.getElementById('rp-rep').textContent   = agent.reputationScore ? `${agent.reputationScore}/100` : '—';
-  document.getElementById('rp-rank').textContent  = agent.rankScore ? `${agent.rankScore}` : '—';
-  document.getElementById('rp-x402').textContent  = agent.x402 ? '✓ Supported' : '—';
-  document.getElementById('rp-updated').textContent =
-    agent.lastUpdatedAt ? timeAgo(agent.lastUpdatedAt) : '—';
+  document.getElementById('rp-name').textContent = a.name;
+  document.getElementById('rp-desc').textContent = `${a.feedbacks.length} feedbacks seen`;
+  document.getElementById('rp-chain').textContent = chainName(a.chainId);
+  document.getElementById('rp-score').textContent = a.score ? `${a.score}/100` : '—';
+  document.getElementById('rp-fbc').textContent  = a.feedbacks.length;
+  document.getElementById('rp-last').textContent = ago(a.lastAt);
 
-  // endpoints
-  const epSec = document.getElementById('rp-ep-sec');
-  const epEl  = document.getElementById('rp-eps');
-  if (agent.endpoints && agent.endpoints.length) {
-    epSec.style.display = '';
-    epEl.innerHTML = agent.endpoints.map(ep => `
-      <div class="rp-field" style="flex-direction:column;align-items:flex-start;gap:2px;padding:5px 0;border-bottom:1px solid var(--border);">
-        <span style="font-family:monospace;font-size:10px;color:var(--navy);">${esc(ep.path)}</span>
-        <span style="font-size:10px;color:var(--muted);">${esc(ep.desc||'')} <b style="color:var(--accent)">${esc(ep.price||'')}</b></span>
-      </div>`).join('');
-  } else { epSec.style.display = 'none'; }
+  // hide invoke for now (no endpoint data from 8004scan)
+  document.getElementById('rp-inv').style.display = 'none';
 
-  // invoke
-  const invokeBtn = document.getElementById('rp-invoke');
-  const invokeUrl = agent.host
-    ? `https://${agent.host}${agent.endpoints?.[0]?.path || ''}`
-    : agent.endpoints?.[0] ? '#' : null;
-  if (invokeUrl) {
-    invokeBtn.href = invokeUrl;
-    invokeBtn.style.display = '';
-  } else { invokeBtn.style.display = 'none'; }
-
-  // placeholder txs while loading
-  document.getElementById('rp-txs').innerHTML =
-    '<div style="color:var(--muted);font-size:11px;padding:4px 0;">Loading…</div>';
+  // feedbacks for this agent — client-side from loaded data
+  const fbs = a.feedbacks.slice(0, 15);
+  const el = document.getElementById('rp-fbs');
+  if (!fbs.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:10px;">No feedbacks loaded</div>';
+  } else {
+    el.innerHTML = fbs.map(fb => {
+      const sc=fb.score||0, sc_col=sc>=80?'#27ae60':sc>=50?'var(--accent)':'var(--muted)';
+      const tx=fb.transaction_hash||'';
+      const base=fb.chain_id===8453?'https://basescan.org/tx/':'https://etherscan.io/tx/';
+      const user=fb.user_address?fb.user_address.slice(0,6)+'…'+fb.user_address.slice(-4):'?';
+      return `<div class="rxi">
+        <div style="display:flex;justify-content:space-between">
+          <b style="color:${sc_col};font-family:monospace">score ${sc}</b>
+          <span style="color:var(--muted)">${ago(fb.submitted_at||fb.created_at)}</span>
+        </div>
+        <div style="color:var(--muted);margin-top:2px">from <b style="color:var(--navy)">${user}</b></div>
+        ${fb.tag1?`<div style="color:var(--muted);margin-top:1px">${esc(fb.tag1)}${fb.tag2?' · '+esc(fb.tag2):''}</div>`:''}
+        ${tx?`<div><a href="${base}${tx}" target="_blank" style="color:var(--accent);font-family:monospace;font-size:9px">${tx.slice(0,12)}…</a></div>`:''}
+      </div>`;
+    }).join('');
+  }
 
   document.getElementById('right').classList.add('open');
-  // highlight in list
-  document.querySelectorAll('.al-item').forEach(el => el.classList.remove('selected'));
-  // can't easily target by id in innerHTML, so just re-render list
-}
-
-function renderDetailTxs(fbs) {
-  const el = document.getElementById('rp-txs');
-  if (!fbs.length) {
-    el.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:4px 0;">No feedbacks found</div>';
-    return;
-  }
-  el.innerHTML = fbs.map(fb => {
-    const t = timeAgo(fb.submitted_at || fb.created_at);
-    const userShort = fb.user_address ? fb.user_address.slice(0,6)+'…'+fb.user_address.slice(-4) : '?';
-    const txHash = fb.transaction_hash || '';
-    const baseUrl = fb.chain_id === 8453 ? 'https://basescan.org/tx/' : 'https://etherscan.io/tx/';
-    const sc = fb.score || 0;
-    const scColor = sc >= 80 ? '#27ae60' : sc >= 50 ? 'var(--accent)' : 'var(--muted)';
-    return `
-      <div class="rp-tx-item">
-        <div style="display:flex;justify-content:space-between;">
-          <span style="font-family:monospace;font-size:10px;font-weight:700;color:${scColor}">score ${sc}</span>
-          <span style="font-size:10px;color:var(--muted);font-family:monospace">${t}</span>
-        </div>
-        <div style="margin-top:2px;font-size:10px;font-family:monospace;color:var(--muted)">
-          from <b style="color:var(--navy)">${userShort}</b>
-        </div>
-        ${fb.tag1 ? `<div style="margin-top:2px;font-size:10px;color:var(--muted)">${esc(fb.tag1)}${fb.tag2?' · '+esc(fb.tag2):''}</div>` : ''}
-        ${txHash
-          ? `<a href="${baseUrl}${txHash}" target="_blank" style="font-family:monospace;font-size:10px;color:var(--accent);">${txHash.slice(0,10)}…</a>`
-          : ''}
-      </div>`;
-  }).join('');
+  renderList(filteredAgents); // re-render to update selected highlight
 }
 
 function closeDetail() {
+  selectedId = null;
   document.getElementById('right').classList.remove('open');
-  selectedAgent = null;
+  renderList(filteredAgents);
 }
 
-// ── UTILS ─────────────────────────────────────────
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function timeAgo(ts) {
-  if (!ts) return '';
-  const d = (Date.now() - new Date(ts).getTime()) / 1000;
-  if (d < 60) return Math.floor(d)+'s ago';
-  if (d < 3600) return Math.floor(d/60)+'m ago';
-  if (d < 86400) return Math.floor(d/3600)+'h ago';
-  return Math.floor(d/86400)+'d ago';
-}
-function copyUrl(btn, url) {
+// ── COPY ─────────────────────────────────────────
+function cp(btn, url) {
   navigator.clipboard.writeText(url).then(() => {
-    btn.textContent = 'copied!'; btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+    btn.textContent='ok!'; btn.classList.add('ok');
+    setTimeout(()=>{ btn.textContent='copy'; btn.classList.remove('ok'); }, 1800);
   });
+}
+
+// ── POLL FEEDBACKS ────────────────────────────────
+async function poll() {
+  const raw = await GET('https://8004scan.io/api/v1/public/feedbacks?limit=30&is_testnet=false', false);
+  const fbs = raw?.data || [];
+  if (!fbs.length) return 0;
+
+  // update total count display
+  const total = raw?.meta?.pagination?.total;
+  if (total) document.getElementById('st-txns').textContent = Number(total).toLocaleString();
+
+  const added = ingest(fbs);
+  if (added > 0) {
+    // only prepend truly new items
+    const newFbs = fbs.filter(fb => fb.id && allFeedbacks.slice(0,added).find(f=>f.id===fb.id));
+    prependCards(fbs.filter(fb => newFbs.find(n=>n.id===fb.id)));
+  }
+  return added;
 }
 
 // ── COUNTDOWN ────────────────────────────────────
 function startCountdown() {
-  nextRefreshSec = 15;
-  clearInterval(refreshTimer);
-  refreshTimer = setInterval(() => {
-    nextRefreshSec--;
-    document.getElementById('next-refresh').textContent = nextRefreshSec + 's';
-    if (nextRefreshSec <= 0) {
-      nextRefreshSec = 15;
-      refreshFeed();
+  setInterval(() => {
+    countdown--;
+    document.getElementById('nxt').textContent = countdown+'s';
+    if (countdown <= 0) {
+      countdown = 15;
+      poll();
     }
   }, 1000);
 }
 
 // ── MAIN ─────────────────────────────────────────
 async function main() {
-  // 1. Load feed immediately
-  await refreshFeed();
+  // First load
+  const raw = await GET('https://8004scan.io/api/v1/public/feedbacks?limit=50&is_testnet=false', false);
+  const fbs = raw?.data || [];
+
+  if (fbs.length) {
+    ingest(fbs);
+    prependCards(fbs);
+    const total = raw?.meta?.pagination?.total;
+    if (total) document.getElementById('st-txns').textContent = Number(total).toLocaleString();
+    document.getElementById('st-agents').textContent = agentList.length;
+  } else {
+    document.getElementById('feed').innerHTML = '<div class="empty">No data received. Check console for errors.</div>';
+  }
+
   startCountdown();
-
-  // 2. Load xgate agents (4 pages × 50, ~200 total)
-  document.getElementById('agent-list-wrap').innerHTML =
-    '<div style="padding:16px;text-align:center;color:var(--muted);font-size:11px;font-family:monospace;">Fetching agents…</div>';
-
-  const fetched = await loadXgateAgents();
-  // prepend our agents
-  xgateAgents = [
-    ...OUR_AGENTS.map(a => ({...a, isOurs:true})),
-    ...fetched
-  ];
-  fetched.forEach(a => { agentById[a.id] = a; });
-  OUR_AGENTS.forEach(a => { agentById[a.id] = a; });
-
-  filteredList = xgateAgents;
-  document.getElementById('agent-count').textContent = `(${xgateAgents.length})`;
-  renderAgentList(filteredList);
-
-  // 3. Stats
-  const stats = await loadStats();
-  document.getElementById('st-agents').textContent = xgateAgents.length.toLocaleString();
-  document.getElementById('st-txns').textContent   =
-    stats.feedbackTotal ? stats.feedbackTotal.toLocaleString() : '—';
-
-  // 4. Reload agents every 2 min
-  setInterval(async () => {
-    const fresh = await loadXgateAgents();
-    fresh.forEach(a => { agentById[a.id] = a; });
-    xgateAgents = [
-      ...OUR_AGENTS.map(a => ({...a, isOurs:true})),
-      ...fresh
-    ];
-    filteredList = xgateAgents;
-    document.getElementById('agent-count').textContent = `(${xgateAgents.length})`;
-    renderAgentList(filteredList);
-    document.getElementById('st-agents').textContent = xgateAgents.length.toLocaleString();
-  }, 120000);
 }
 
 main();
