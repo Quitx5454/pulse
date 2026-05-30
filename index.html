@@ -8,1553 +8,810 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
   --bg:#eef6fd;
-  --panel-bg:#ffffff;
+  --panel:#ffffff;
   --border:#c5ddf5;
-  --grid-color:#b8d4ef;
-  --node-color:#1a5fa8;
-  --edge-color:#90bce8;
+  --grid:#b8d4ef;
   --accent:#2980d9;
+  --navy:#1a3a6e;
   --text:#1a2a3a;
-  --text-muted:#5a7a9a;
-  --panel-width:260px;
-  --right-panel-width:300px;
+  --muted:#5a7a9a;
+  --lw:280px;
+  --rw:320px;
 }
+html,body{height:100%;overflow:hidden;}
 body{
   background:var(--bg);
   color:var(--text);
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   font-size:13px;
-  height:100vh;
-  overflow:hidden;
   display:flex;
 }
-/* Grid background */
 body::before{
-  content:'';
-  position:fixed;
-  inset:0;
+  content:'';position:fixed;inset:0;
   background-image:
-    linear-gradient(var(--grid-color) 1px,transparent 1px),
-    linear-gradient(90deg,var(--grid-color) 1px,transparent 1px);
+    linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px);
   background-size:40px 40px;
-  opacity:0.25;
-  pointer-events:none;
-  z-index:0;
+  opacity:.22;pointer-events:none;z-index:0;
 }
 
-/* ===== LEFT PANEL ===== */
-#left-panel{
-  width:var(--panel-width);
-  min-width:var(--panel-width);
-  height:100vh;
-  background:var(--panel-bg);
+/* ── SCROLLBARS ── */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--border);}
+::-webkit-scrollbar-track{background:transparent;}
+
+/* ── LEFT PANEL — Agent List ── */
+#left{
+  width:var(--lw);min-width:var(--lw);
+  height:100vh;background:var(--panel);
   border-right:1px solid var(--border);
-  display:flex;
-  flex-direction:column;
-  overflow-y:auto;
-  z-index:10;
-  position:relative;
+  display:flex;flex-direction:column;
+  z-index:10;position:relative;
 }
-#left-panel::-webkit-scrollbar{width:4px;}
-#left-panel::-webkit-scrollbar-track{background:transparent;}
-#left-panel::-webkit-scrollbar-thumb{background:var(--border);}
+.ph{padding:16px 16px 12px;border-bottom:1px solid var(--border);}
+.ph h1{font-size:20px;font-weight:700;color:var(--navy);letter-spacing:-.5px;}
+.ph p{font-size:11px;color:var(--muted);margin-top:2px;font-family:monospace;}
 
-.panel-header{
-  padding:20px 16px 12px;
-  border-bottom:1px solid var(--border);
-}
-.panel-header h1{
-  font-size:22px;
-  font-weight:700;
-  color:var(--node-color);
-  letter-spacing:-0.5px;
-}
-.panel-header p{
-  font-size:11px;
-  color:var(--text-muted);
-  margin-top:2px;
-  font-family:monospace;
+.sec{padding:10px 16px;border-bottom:1px solid var(--border);}
+.sec-title{
+  font-size:10px;font-weight:600;color:var(--muted);
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;
 }
 
-.section{
-  padding:12px 16px;
-  border-bottom:1px solid var(--border);
-}
-.section-title{
-  font-size:10px;
-  font-weight:600;
-  color:var(--text-muted);
-  text-transform:uppercase;
-  letter-spacing:1px;
-  margin-bottom:10px;
-}
+/* stats */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.sbox{background:var(--bg);border:1px solid var(--border);padding:8px;}
+.sl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+.sv{font-size:16px;font-weight:700;color:var(--navy);font-family:monospace;margin-top:1px;}
 
-/* Stats grid */
-.stats-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
+/* our agents */
+.our-card{
+  background:var(--bg);border:1px solid var(--accent);
+  padding:8px;margin-bottom:6px;
 }
-.stat-box{
-  background:var(--bg);
-  border:1px solid var(--border);
-  padding:10px;
+.our-card:last-child{margin-bottom:0;}
+.our-name{font-weight:700;color:var(--accent);font-size:12px;margin-bottom:5px;}
+.ep-row{
+  display:flex;align-items:center;gap:5px;
+  padding:3px 0;border-top:1px solid var(--border);
 }
-.stat-label{
-  font-size:10px;
-  color:var(--text-muted);
-  text-transform:uppercase;
-  letter-spacing:0.5px;
-}
-.stat-value{
-  font-size:18px;
-  font-weight:700;
-  color:var(--node-color);
-  margin-top:2px;
-  font-family:monospace;
-}
-
-/* Top agents */
-.agent-row{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding:6px 0;
-  cursor:pointer;
-  border-bottom:1px solid var(--border);
-}
-.agent-row:last-child{border-bottom:none;}
-.agent-row:hover{background:var(--bg);margin:0 -16px;padding:6px 16px;}
-.agent-rank{
-  font-size:10px;
-  color:var(--text-muted);
-  font-family:monospace;
-  min-width:20px;
-}
-.agent-dot{
-  width:8px;height:8px;
-  border-radius:50%;
-  background:var(--node-color);
-  flex-shrink:0;
-}
-.agent-dot.our{background:var(--accent);}
-.agent-info{flex:1;min-width:0;}
-.agent-name{
-  font-weight:600;
-  font-size:12px;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-.agent-rep{
-  font-size:10px;
-  color:var(--text-muted);
-  font-family:monospace;
-}
-.rep-bar{
-  height:2px;
-  background:var(--border);
-  margin-top:3px;
-}
-.rep-fill{
-  height:100%;
-  background:var(--accent);
-}
-
-/* Activity feed */
-.activity-item{
-  padding:6px 0;
-  border-bottom:1px solid var(--border);
-  font-size:11px;
-}
-.activity-item:last-child{border-bottom:none;}
-.activity-time{
-  color:var(--text-muted);
-  font-family:monospace;
-  font-size:10px;
-}
-.activity-text{
-  margin-top:2px;
-  line-height:1.4;
-}
-
-/* Our agents section */
-.our-agent-card{
-  background:var(--bg);
-  border:1px solid var(--accent);
-  padding:10px;
-  margin-bottom:8px;
-}
-.our-agent-card:last-child{margin-bottom:0;}
-.our-agent-name{
-  font-weight:700;
-  color:var(--accent);
-  font-size:13px;
-  margin-bottom:6px;
-}
-.endpoint-row{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  padding:4px 0;
-  border-top:1px solid var(--border);
-}
-.endpoint-path{
-  font-family:monospace;
-  font-size:10px;
-  color:var(--node-color);
-  flex:1;
-  min-width:0;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-.endpoint-price{
-  font-size:10px;
-  font-family:monospace;
-  color:var(--accent);
-  white-space:nowrap;
-}
+.ep-path{font-family:monospace;font-size:9px;color:var(--navy);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;}
+.ep-price{font-size:9px;font-family:monospace;color:var(--accent);white-space:nowrap;}
 .copy-btn{
-  background:none;
-  border:1px solid var(--border);
-  padding:2px 6px;
-  font-size:9px;
-  cursor:pointer;
-  color:var(--text-muted);
-  font-family:monospace;
+  background:none;border:1px solid var(--border);
+  padding:1px 5px;font-size:8px;cursor:pointer;
+  color:var(--muted);font-family:monospace;
 }
 .copy-btn:hover{border-color:var(--accent);color:var(--accent);}
 .copy-btn.copied{border-color:#27ae60;color:#27ae60;}
-.endpoint-desc{
-  font-size:10px;
-  color:var(--text-muted);
-  margin-top:2px;
-  padding-left:0;
-}
 
-/* ===== CENTER CANVAS ===== */
-#canvas-container{
-  flex:1;
-  position:relative;
-  overflow:hidden;
-}
-#three-canvas{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-}
-
-/* LIVE indicator */
-#live-indicator{
-  position:absolute;
-  top:16px;
-  left:16px;
-  display:flex;
-  align-items:center;
-  gap:6px;
-  background:var(--panel-bg);
-  border:1px solid var(--border);
-  padding:5px 10px;
-  font-size:11px;
-  font-weight:600;
+/* search */
+#agent-search{
+  width:100%;padding:6px 10px;
+  border:1px solid var(--border);background:var(--bg);
+  font-size:12px;color:var(--text);outline:none;
   font-family:monospace;
-  color:var(--node-color);
-  z-index:5;
 }
-.live-dot{
-  width:7px;height:7px;
-  border-radius:50%;
-  background:var(--accent);
-  animation:pulse-dot 1.5s ease-in-out infinite;
-}
-@keyframes pulse-dot{
-  0%,100%{opacity:1;transform:scale(1);}
-  50%{opacity:0.5;transform:scale(0.8);}
-}
+#agent-search::placeholder{color:var(--muted);}
+#agent-search:focus{border-color:var(--accent);}
 
-/* Zoom controls */
-#zoom-controls{
-  position:absolute;
-  top:16px;
-  right:16px;
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-  z-index:5;
+/* agent list */
+#agent-list-wrap{flex:1;overflow-y:auto;padding:0;}
+.al-item{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 16px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background .12s;
 }
-.zoom-btn{
-  width:32px;height:32px;
-  background:var(--panel-bg);
-  border:1px solid var(--border);
-  font-size:16px;
-  cursor:pointer;
-  color:var(--node-color);
+.al-item:hover{background:var(--bg);}
+.al-item.selected{background:#e8f3fd;border-left:2px solid var(--accent);}
+.al-avatar{
+  width:28px;height:28px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;color:#fff;flex-shrink:0;
 }
-.zoom-btn:hover{background:var(--bg);border-color:var(--accent);}
+.al-info{flex:1;min-width:0;}
+.al-name{font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.al-meta{font-size:10px;color:var(--muted);font-family:monospace;margin-top:1px;}
+.al-score{
+  font-size:10px;font-family:monospace;font-weight:700;
+  padding:2px 5px;
+}
+.score-hi{color:#27ae60;}
+.score-mid{color:var(--accent);}
+.score-lo{color:var(--muted);}
 
-/* Tooltip */
-#tooltip{
-  position:absolute;
-  background:var(--panel-bg);
-  border:1px solid var(--border);
-  padding:8px 12px;
-  font-size:11px;
-  pointer-events:none;
-  z-index:20;
-  display:none;
-  max-width:200px;
+/* ── CENTER — Live Feed ── */
+#center{
+  flex:1;height:100vh;
+  display:flex;flex-direction:column;
+  position:relative;overflow:hidden;
+  z-index:5;
 }
-#tooltip-name{font-weight:700;color:var(--node-color);margin-bottom:2px;}
-#tooltip-info{color:var(--text-muted);}
+#feed-header{
+  background:var(--panel);border-bottom:1px solid var(--border);
+  padding:12px 20px;display:flex;align-items:center;gap:12px;
+  flex-shrink:0;
+}
+#feed-header h2{font-size:14px;font-weight:700;color:var(--navy);}
+.live-pill{
+  display:flex;align-items:center;gap:5px;
+  background:var(--bg);border:1px solid var(--border);
+  padding:3px 8px;font-size:10px;font-weight:600;
+  font-family:monospace;color:var(--navy);
+}
+.ldot{
+  width:6px;height:6px;border-radius:50%;background:var(--accent);
+  animation:blink 1.4s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+#refresh-info{
+  font-size:10px;color:var(--muted);font-family:monospace;margin-left:auto;
+}
 
-/* ===== RIGHT PANEL ===== */
-#right-panel{
-  width:0;
-  min-width:0;
-  height:100vh;
-  background:var(--panel-bg);
-  border-left:1px solid var(--border);
-  overflow:hidden;
-  transition:width 0.25s ease, min-width 0.25s ease;
-  z-index:10;
-  display:flex;
-  flex-direction:column;
-}
-#right-panel.open{
-  width:var(--right-panel-width);
-  min-width:var(--right-panel-width);
-}
-#right-panel-inner{
-  width:var(--right-panel-width);
-  padding:16px;
-  overflow-y:auto;
-  height:100%;
-}
-#right-panel-inner::-webkit-scrollbar{width:4px;}
-#right-panel-inner::-webkit-scrollbar-thumb{background:var(--border);}
+#feed-wrap{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:10px;}
 
-.rp-close{
-  float:right;
-  background:none;
-  border:none;
-  font-size:16px;
+/* feed card */
+.fc{
+  background:var(--panel);border:1px solid var(--border);
+  padding:12px 14px;
+  animation:slideIn .3s ease;
   cursor:pointer;
-  color:var(--text-muted);
-  line-height:1;
+}
+.fc:hover{border-color:var(--accent);background:#f5faff;}
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+
+.fc-top{display:flex;align-items:flex-start;gap:10px;}
+.fc-avatar{
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:#fff;flex-shrink:0;margin-top:1px;
+}
+.fc-body{flex:1;min-width:0;}
+.fc-name{font-weight:700;font-size:13px;color:var(--navy);}
+.fc-endpoint{font-size:10px;font-family:monospace;color:var(--muted);margin-top:1px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fc-row{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap;}
+.tag{
+  font-size:10px;font-family:monospace;padding:2px 6px;
+  background:var(--bg);border:1px solid var(--border);color:var(--muted);
+}
+.tag.score-hi{border-color:#27ae60;color:#27ae60;background:#f0fff4;}
+.tag.score-mid{border-color:var(--accent);color:var(--accent);background:#eff7ff;}
+.fc-meta{font-size:10px;color:var(--muted);margin-top:6px;font-family:monospace;}
+.fc-user{
+  display:inline-block;background:var(--bg);border:1px solid var(--border);
+  padding:1px 5px;font-family:monospace;font-size:10px;color:var(--navy);
+}
+.fc-tx{
+  font-family:monospace;font-size:10px;color:var(--accent);
+  text-decoration:none;
+}
+.fc-tx:hover{text-decoration:underline;}
+.fc-time{color:var(--muted);font-size:10px;font-family:monospace;}
+
+.feed-empty{
+  text-align:center;padding:60px 20px;
+  color:var(--muted);font-family:monospace;font-size:12px;
+}
+
+/* loading skeleton */
+.skeleton{
+  background:linear-gradient(90deg,var(--border) 25%,var(--bg) 50%,var(--border) 75%);
+  background-size:200% 100%;
+  animation:shimmer 1.5s infinite;
+  height:12px;margin:4px 0;
+}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ── RIGHT PANEL — Agent Detail ── */
+#right{
+  width:0;min-width:0;height:100vh;
+  background:var(--panel);border-left:1px solid var(--border);
+  overflow:hidden;transition:width .22s ease,min-width .22s ease;
+  z-index:10;display:flex;flex-direction:column;
+}
+#right.open{width:var(--rw);min-width:var(--rw);}
+#right-inner{width:var(--rw);overflow-y:auto;height:100%;}
+
+.rp-head{
+  padding:14px 16px 10px;border-bottom:1px solid var(--border);
+  position:sticky;top:0;background:var(--panel);z-index:2;
+}
+.rp-close{
+  float:right;background:none;border:none;
+  font-size:16px;cursor:pointer;color:var(--muted);line-height:1;
 }
 .rp-close:hover{color:var(--text);}
-.rp-agent-name{
-  font-size:18px;
-  font-weight:700;
-  color:var(--node-color);
-  margin-bottom:4px;
-  clear:both;
+.rp-avatar-row{display:flex;align-items:center;gap:10px;margin-top:8px;clear:both;}
+.rp-avatar{
+  width:44px;height:44px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:700;color:#fff;flex-shrink:0;
 }
-.rp-desc{
-  font-size:12px;
-  color:var(--text-muted);
-  line-height:1.5;
-  margin-bottom:12px;
-}
-.rp-divider{height:1px;background:var(--border);margin:12px 0;}
-.rp-field{display:flex;justify-content:space-between;align-items:center;padding:5px 0;}
-.rp-field-label{color:var(--text-muted);font-size:11px;}
-.rp-field-value{font-weight:600;font-size:12px;font-family:monospace;}
-.health-online{color:#27ae60;}
-.health-offline{color:#e74c3c;}
-.health-unknown{color:var(--text-muted);}
-.invoke-btn{
-  display:block;
-  width:100%;
-  margin-top:16px;
-  padding:10px;
-  background:var(--accent);
-  color:#fff;
-  border:none;
-  font-size:13px;
-  font-weight:600;
-  cursor:pointer;
-  text-align:center;
-  text-decoration:none;
-  font-family:monospace;
-}
-.invoke-btn:hover{background:var(--node-color);}
+.rp-name{font-size:17px;font-weight:700;color:var(--navy);}
+.rp-desc{font-size:11px;color:var(--muted);line-height:1.5;margin-top:3px;}
 
-/* Loading overlay */
-#loading{
-  position:absolute;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:rgba(238,246,253,0.8);
-  z-index:50;
-  font-family:monospace;
-  font-size:13px;
-  color:var(--node-color);
-  flex-direction:column;
-  gap:12px;
+.rp-sec{padding:10px 16px;border-bottom:1px solid var(--border);}
+.rp-field{display:flex;justify-content:space-between;align-items:center;padding:4px 0;}
+.rfl{color:var(--muted);font-size:11px;}
+.rfv{font-weight:600;font-size:11px;font-family:monospace;}
+
+.invoke-btn{
+  display:block;margin:12px 16px;padding:9px;
+  background:var(--accent);color:#fff;border:none;
+  font-size:12px;font-weight:700;cursor:pointer;
+  text-align:center;text-decoration:none;font-family:monospace;
 }
-.loading-bar{
-  width:200px;
-  height:2px;
-  background:var(--border);
-  overflow:hidden;
+.invoke-btn:hover{background:var(--navy);}
+
+.rp-tx-item{
+  padding:6px 0;border-bottom:1px solid var(--border);font-size:11px;
 }
-.loading-fill{
-  height:100%;
-  background:var(--accent);
-  width:0%;
-  transition:width 0.3s ease;
-}
+.rp-tx-item:last-child{border-bottom:none;}
 </style>
 </head>
 <body>
 
-<!-- LEFT PANEL -->
-<div id="left-panel">
-  <div class="panel-header">
+<!-- ══ LEFT PANEL ══ -->
+<div id="left">
+  <div class="ph">
     <h1>Pulse</h1>
-    <p>live simulation · agent economy</p>
+    <p>live agent economy · xgate.run</p>
   </div>
 
   <!-- Stats -->
-  <div class="section">
-    <div class="section-title">Network Stats</div>
-    <div class="stats-grid">
-      <div class="stat-box">
-        <div class="stat-label">Total Agents</div>
-        <div class="stat-value" id="stat-agents">—</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Active Now</div>
-        <div class="stat-value" id="stat-active">—</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Volume</div>
-        <div class="stat-value" id="stat-volume">—</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Transactions</div>
-        <div class="stat-value" id="stat-txns">—</div>
-      </div>
+  <div class="sec">
+    <div class="sec-title">Network</div>
+    <div class="stats">
+      <div class="sbox"><div class="sl">Agents</div><div class="sv" id="st-agents">—</div></div>
+      <div class="sbox"><div class="sl">Feedbacks</div><div class="sv" id="st-txns">—</div></div>
     </div>
   </div>
 
   <!-- Our Agents -->
-  <div class="section">
-    <div class="section-title">Our Agents</div>
-
-    <div class="our-agent-card">
-      <div class="our-agent-name">Distill</div>
-      <div class="endpoint-desc" style="margin-bottom:6px;font-size:10px;color:var(--text-muted);">distill-agent-production.up.railway.app</div>
-      <div class="endpoint-row">
+  <div class="sec">
+    <div class="sec-title">Our Agents</div>
+    <div class="our-card">
+      <div class="our-name">Distill</div>
+      <div style="font-size:9px;color:var(--muted);margin-bottom:5px;">distill-agent-production.up.railway.app</div>
+      <div class="ep-row">
         <div style="flex:1;min-width:0;">
-          <div class="endpoint-path">/entrypoints/process/invoke</div>
-          <div class="endpoint-desc">blockchain data cleaning</div>
+          <div class="ep-path">/entrypoints/process/invoke</div>
+          <div style="font-size:9px;color:var(--muted);">blockchain data cleaning</div>
         </div>
-        <span class="endpoint-price">0.02 USDC</span>
-        <button class="copy-btn" onclick="copyEndpoint(this,'https://distill-agent-production.up.railway.app/entrypoints/process/invoke')">copy</button>
+        <span class="ep-price">0.02 USDC</span>
+        <button class="copy-btn" onclick="copyUrl(this,'https://distill-agent-production.up.railway.app/entrypoints/process/invoke')">copy</button>
       </div>
     </div>
-
-    <div class="our-agent-card">
-      <div class="our-agent-name">Parse</div>
-      <div class="endpoint-desc" style="margin-bottom:6px;font-size:10px;color:var(--text-muted);">parse-agent-production.up.railway.app</div>
-      <div class="endpoint-row">
-        <div style="flex:1;min-width:0;">
-          <div class="endpoint-path">/entrypoints/product/invoke</div>
-          <div class="endpoint-desc">e-commerce HTML → JSON</div>
-        </div>
-        <span class="endpoint-price">0.01 USDC</span>
-        <button class="copy-btn" onclick="copyEndpoint(this,'https://parse-agent-production.up.railway.app/entrypoints/product/invoke')">copy</button>
+    <div class="our-card">
+      <div class="our-name">Parse</div>
+      <div style="font-size:9px;color:var(--muted);margin-bottom:5px;">parse-agent-production.up.railway.app</div>
+      <div class="ep-row">
+        <div style="flex:1;min-width:0;"><div class="ep-path">/entrypoints/product/invoke</div><div style="font-size:9px;color:var(--muted);">HTML → JSON</div></div>
+        <span class="ep-price">0.01</span>
+        <button class="copy-btn" onclick="copyUrl(this,'https://parse-agent-production.up.railway.app/entrypoints/product/invoke')">copy</button>
       </div>
-      <div class="endpoint-row">
-        <div style="flex:1;min-width:0;">
-          <div class="endpoint-path">/entrypoints/serp/invoke</div>
-          <div class="endpoint-desc">search results → JSON</div>
-        </div>
-        <span class="endpoint-price">0.01 USDC</span>
-        <button class="copy-btn" onclick="copyEndpoint(this,'https://parse-agent-production.up.railway.app/entrypoints/serp/invoke')">copy</button>
+      <div class="ep-row">
+        <div style="flex:1;min-width:0;"><div class="ep-path">/entrypoints/serp/invoke</div><div style="font-size:9px;color:var(--muted);">SERP → JSON</div></div>
+        <span class="ep-price">0.01</span>
+        <button class="copy-btn" onclick="copyUrl(this,'https://parse-agent-production.up.railway.app/entrypoints/serp/invoke')">copy</button>
       </div>
-      <div class="endpoint-row">
-        <div style="flex:1;min-width:0;">
-          <div class="endpoint-path">/entrypoints/entity/invoke</div>
-          <div class="endpoint-desc">text → entities</div>
-        </div>
-        <span class="endpoint-price">0.01 USDC</span>
-        <button class="copy-btn" onclick="copyEndpoint(this,'https://parse-agent-production.up.railway.app/entrypoints/entity/invoke')">copy</button>
+      <div class="ep-row">
+        <div style="flex:1;min-width:0;"><div class="ep-path">/entrypoints/entity/invoke</div><div style="font-size:9px;color:var(--muted);">text → entities</div></div>
+        <span class="ep-price">0.01</span>
+        <button class="copy-btn" onclick="copyUrl(this,'https://parse-agent-production.up.railway.app/entrypoints/entity/invoke')">copy</button>
       </div>
     </div>
   </div>
 
-  <!-- Top Agents -->
-  <div class="section">
-    <div class="section-title">Top Agents</div>
-    <div id="top-agents-list">
-      <!-- filled by JS -->
-    </div>
+  <!-- Agent Search + List -->
+  <div class="sec" style="padding-bottom:6px;">
+    <div class="sec-title">xgate Agents <span id="agent-count" style="font-weight:400;font-size:9px;"></span></div>
+    <input id="agent-search" type="text" placeholder="search agents…" oninput="filterAgents(this.value)">
   </div>
-
-  <!-- Recent Activity -->
-  <div class="section">
-    <div class="section-title">Recent Activity</div>
-    <div id="activity-list">
-      <!-- filled by JS -->
-    </div>
+  <div id="agent-list-wrap">
+    <div style="padding:16px;text-align:center;color:var(--muted);font-size:11px;font-family:monospace;">Loading agents…</div>
   </div>
 </div>
 
-<!-- CENTER CANVAS -->
-<div id="canvas-container">
-  <canvas id="three-canvas"></canvas>
-
-  <div id="live-indicator">
-    <span class="live-dot"></span>
-    LIVE
+<!-- ══ CENTER — Live Feed ══ -->
+<div id="center">
+  <div id="feed-header">
+    <h2>Live Activity</h2>
+    <div class="live-pill"><span class="ldot"></span>LIVE</div>
+    <div id="refresh-info">Refreshes every 15s · <span id="next-refresh">15s</span></div>
   </div>
-
-  <div id="zoom-controls">
-    <button class="zoom-btn" id="zoom-in">+</button>
-    <button class="zoom-btn" id="zoom-out">−</button>
-  </div>
-
-  <div id="tooltip">
-    <div id="tooltip-name"></div>
-    <div id="tooltip-info"></div>
-  </div>
-
-  <div id="loading">
-    <div>Initializing Pulse...</div>
-    <div class="loading-bar"><div class="loading-fill" id="loading-fill"></div></div>
-    <div id="loading-status" style="font-size:11px;color:var(--text-muted);">Fetching agent data</div>
+  <div id="feed-wrap">
+    <div class="feed-empty" id="feed-loading">Loading transactions…</div>
   </div>
 </div>
 
-<!-- RIGHT PANEL -->
-<div id="right-panel">
-  <div id="right-panel-inner">
-    <button class="rp-close" onclick="closeRightPanel()">✕</button>
-    <div class="rp-agent-name" id="rp-name">Agent Name</div>
-    <div class="rp-desc" id="rp-desc">—</div>
-    <div class="rp-divider"></div>
-    <div class="rp-field">
-      <span class="rp-field-label">Network</span>
-      <span class="rp-field-value" id="rp-network">—</span>
+<!-- ══ RIGHT PANEL — Detail ══ -->
+<div id="right">
+  <div id="right-inner">
+    <div class="rp-head">
+      <button class="rp-close" onclick="closeDetail()">✕</button>
+      <div class="rp-avatar-row">
+        <div class="rp-avatar" id="rp-av"></div>
+        <div>
+          <div class="rp-name" id="rp-name">—</div>
+          <div class="rp-desc" id="rp-desc">—</div>
+        </div>
+      </div>
     </div>
-    <div class="rp-field">
-      <span class="rp-field-label">Price</span>
-      <span class="rp-field-value" id="rp-price">—</span>
+    <div class="rp-sec">
+      <div class="rp-field"><span class="rfl">Network</span><span class="rfv" id="rp-net">—</span></div>
+      <div class="rp-field"><span class="rfl">Chain ID</span><span class="rfv" id="rp-chain">—</span></div>
+      <div class="rp-field"><span class="rfl">Reputation</span><span class="rfv" id="rp-rep">—</span></div>
+      <div class="rp-field"><span class="rfl">Rank Score</span><span class="rfv" id="rp-rank">—</span></div>
+      <div class="rp-field"><span class="rfl">x402 Support</span><span class="rfv" id="rp-x402">—</span></div>
+      <div class="rp-field"><span class="rfl">Last Updated</span><span class="rfv" id="rp-updated">—</span></div>
     </div>
-    <div class="rp-field">
-      <span class="rp-field-label">Reputation</span>
-      <span class="rp-field-value" id="rp-rep">—</span>
+    <div class="rp-sec" id="rp-ep-sec" style="display:none;">
+      <div class="sec-title">Endpoints</div>
+      <div id="rp-eps"></div>
     </div>
-    <div class="rp-field">
-      <span class="rp-field-label">Health</span>
-      <span class="rp-field-value" id="rp-health">—</span>
+    <a class="invoke-btn" id="rp-invoke" href="#" target="_blank" style="display:none;">Invoke Agent →</a>
+    <div class="rp-sec">
+      <div class="sec-title">Recent Feedbacks</div>
+      <div id="rp-txs"><div style="color:var(--muted);font-size:11px;padding:4px 0;">No feedback data</div></div>
     </div>
-    <div class="rp-divider"></div>
-    <div id="rp-endpoints"></div>
-    <div id="rp-transactions"></div>
-    <a class="invoke-btn" id="rp-invoke" href="#" target="_blank">Invoke →</a>
   </div>
 </div>
-
-<!-- THREE.JS CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
 <script>
-// ===================================================
-// PULSE — Main Application
-// ===================================================
+// ══════════════════════════════════════════════════
+// PULSE — Live Agent Economy
+// Refresh: feed every 15s, agents every 120s
+// ══════════════════════════════════════════════════
 
-// ─── xgate agent decoder ─────────────────────────────
-function decodeXgateAgent(raw) {
-  let name = raw.name || null;
-  let description = '';
-  const uri = raw.tokenUri || '';
-  if (uri.startsWith('data:application/json;base64,')) {
-    try {
-      const meta = JSON.parse(atob(uri.split(',')[1]));
-      name = name || meta.name;
-      description = meta.description || '';
-    } catch(e) {}
-  }
-  return {
-    id: String(raw.agentId || raw.agentKey || Math.random()),
-    name: name || `Agent #${raw.agentId}`,
-    description,
-    reputation: raw.reputationScore || Math.round((raw.rankScore || 50)),
-    network: raw.chainId === 8453 ? 'Base' : raw.chainId === 1 ? 'Ethereum' :
-             raw.chainId === 137 ? 'Polygon' : raw.chainId === 100 ? 'Gnosis' :
-             raw.chainId ? `Chain ${raw.chainId}` : 'Base',
-    price: '—',
-    endpoints: [],
-    walletAddress: raw.wallet || null,
-    _raw: raw,
-  };
-}
-
+// ── OUR AGENTS ───────────────────────────────────
 const OUR_AGENTS = [
   {
-    id: 'distill',
-    name: 'Distill',
-    host: 'distill-agent-production.up.railway.app',
-    description: 'Blockchain data cleaning & normalization agent',
-    network: 'Base',
-    reputation: 95,
-    endpoints: [
-      { path: '/entrypoints/process/invoke', price: '0.02 USDC', desc: 'blockchain data cleaning' }
-    ]
+    id:'distill', name:'Distill',
+    host:'distill-agent-production.up.railway.app',
+    description:'Blockchain data cleaning & normalization',
+    network:'Base', chainId:8453, reputationScore:95, rankScore:95,
+    x402:true,
+    endpoints:[{path:'/entrypoints/process/invoke',price:'0.02 USDC',desc:'blockchain data cleaning'}]
   },
   {
-    id: 'parse',
-    name: 'Parse',
-    host: 'parse-agent-production.up.railway.app',
-    description: 'Structured data extraction from web content',
-    network: 'Base',
-    reputation: 92,
-    endpoints: [
-      { path: '/entrypoints/product/invoke', price: '0.01 USDC', desc: 'e-commerce HTML → JSON' },
-      { path: '/entrypoints/serp/invoke', price: '0.01 USDC', desc: 'search results → JSON' },
-      { path: '/entrypoints/entity/invoke', price: '0.01 USDC', desc: 'text → entities' }
+    id:'parse', name:'Parse',
+    host:'parse-agent-production.up.railway.app',
+    description:'Structured data extraction from web content',
+    network:'Base', chainId:8453, reputationScore:92, rankScore:92,
+    x402:true,
+    endpoints:[
+      {path:'/entrypoints/product/invoke',price:'0.01 USDC',desc:'HTML → JSON'},
+      {path:'/entrypoints/serp/invoke',   price:'0.01 USDC',desc:'SERP → JSON'},
+      {path:'/entrypoints/entity/invoke', price:'0.01 USDC',desc:'text → entities'},
     ]
   }
 ];
 
-// Mock fallback data
-const MOCK_AGENTS = [
-  { id: 'mock1', name: 'DataFlow', reputation: 88, network: 'Base', price: '0.05 USDC', description: 'Real-time data pipeline agent' },
-  { id: 'mock2', name: 'CodeGen', reputation: 84, network: 'Base', price: '0.10 USDC', description: 'AI code generation service' },
-  { id: 'mock3', name: 'Summarize', reputation: 79, network: 'Ethereum', price: '0.03 USDC', description: 'Text summarization agent' },
-  { id: 'mock4', name: 'Translate', reputation: 76, network: 'Base', price: '0.02 USDC', description: 'Multi-language translation' },
-  { id: 'mock5', name: 'Classify', reputation: 73, network: 'Solana', price: '0.01 USDC', description: 'Content classification' },
-  { id: 'mock6', name: 'Embedder', reputation: 70, network: 'Base', price: '0.02 USDC', description: 'Vector embedding service' },
-  { id: 'mock7', name: 'Router', reputation: 68, network: 'Base', price: '0.01 USDC', description: 'Agent routing & orchestration' },
-  { id: 'mock8', name: 'Monitor', reputation: 65, network: 'Ethereum', price: '0.04 USDC', description: 'On-chain monitoring agent' },
-  { id: 'mock9', name: 'Validator', reputation: 62, network: 'Base', price: '0.03 USDC', description: 'Data validation service' },
-  { id: 'mock10', name: 'Indexer', reputation: 59, network: 'Solana', price: '0.02 USDC', description: 'Blockchain indexing agent' },
-];
+// ── STATE ────────────────────────────────────────
+let xgateAgents  = [];         // all fetched xgate agents
+let filteredList = [];         // after search
+let feedItems    = [];         // rendered feed cards
+let agentById    = {};         // id → agent
+let seenFeedIds  = new Set();  // deduplicate feed
+let selectedAgent = null;
+let nextRefreshSec = 15;
+let refreshTimer = null;
 
-const MOCK_STATS = {
-  totalAgents: 247,
-  activeNow: 89,
-  volume: '$14.2K',
-  transactions: 3841
-};
-
-const MOCK_ACTIVITY = [
-  { time: '12s ago', text: 'CodeGen → DataFlow · 0.05 USDC' },
-  { time: '45s ago', text: 'Distill processed 142 records' },
-  { time: '1m ago', text: 'Parse extracted 38 products' },
-  { time: '2m ago', text: 'Translate → Summarize · 0.03 USDC' },
-  { time: '3m ago', text: 'New agent joined: Embedder' },
-];
-
-// ===================================================
-// STATE
-// ===================================================
-let nodes = [];
-let edges = [];
-let agentMap = {};
-let agentFeedbacks = {};   // { agentId: [tx, ...] }
-let allFeedbacks  = [];
-let selectedNode = null;
-
-// SWR cache
-const cache = {};
-const reqQueue = [];
-let reqCount = 0;
-let lastReset = Date.now();
-
-async function fetchWithCache(url, ttl = 30000) {
+// ── HTTP CACHE ───────────────────────────────────
+const httpCache = {};
+async function apiFetch(url, ttl = 12000) {
   const now = Date.now();
-  if (cache[url] && now - cache[url].ts < ttl) return cache[url].data;
-
-  // Rate limit: 10 req/min
-  if (now - lastReset > 60000) { reqCount = 0; lastReset = now; }
-  if (reqCount >= 10) {
-    await new Promise(r => setTimeout(r, 6000));
-    return fetchWithCache(url, ttl);
-  }
-
+  if (httpCache[url] && now - httpCache[url].ts < ttl) return httpCache[url].data;
   try {
-    reqCount++;
-    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-    if (!res.ok) throw new Error(res.status);
-    const data = await res.json();
-    cache[url] = { data, ts: now };
+    const r = await fetch(url, { signal: AbortSignal.timeout(9000) });
+    if (!r.ok) throw new Error(r.status);
+    const data = await r.json();
+    httpCache[url] = { data, ts: now };
     return data;
-  } catch (e) {
-    console.warn('Fetch failed:', url, e.message);
+  } catch(e) {
+    console.warn('fetch error', url, e.message);
     return null;
   }
 }
 
-// ===================================================
-// DATA LOADING
-// ===================================================
-function setLoadingStatus(text, pct) {
-  document.getElementById('loading-status').textContent = text;
-  document.getElementById('loading-fill').style.width = pct + '%';
+// ── COLORS ───────────────────────────────────────
+const PALETTE = [
+  '#1a5fa8','#2980d9','#1e3a6e','#27ae60','#8e44ad',
+  '#2c3e50','#16a085','#c0392b','#d35400','#7f8c8d'
+];
+function agentColor(name) {
+  let h = 0;
+  for (const c of (name||'?')) h = (h*31 + c.charCodeAt(0)) & 0xffff;
+  return PALETTE[h % PALETTE.length];
+}
+function initials(name) {
+  if (!name) return '?';
+  const w = name.trim().split(/\s+/);
+  return w.length >= 2
+    ? (w[0][0]+w[1][0]).toUpperCase()
+    : name.slice(0,2).toUpperCase();
+}
+function chainName(id) {
+  return {8453:'Base',1:'Ethereum',137:'Polygon',100:'Gnosis',
+          56:'BSC',42161:'Arbitrum',10:'Optimism'}[id] || `Chain ${id}`;
 }
 
-function buildAgentNodes(xgateAgents, scanAgents) {
-  // Always start with our agents
-  const nodeList = OUR_AGENTS.map(a => ({
-    ...a,
-    isOurs: true,
-    size: 3.2,
-    color: 0x111111,
-  }));
-
-  // Merge xgate + 8004scan, deduplicate by name
-  const seen = new Set(OUR_AGENTS.map(a => a.name.toLowerCase()));
-
-  const add = (a) => {
-    const rep = Number(a.reputation || a.total_score || a.reputationScore || 50);
-    const key = (a.name || '').toLowerCase();
-    if (!key || seen.has(key)) return;
-    seen.add(key);
-    nodeList.push({
-      id: a.id || String(Math.random()),
-      name: a.name,
-      description: a.description || '',
-      reputation: Math.min(100, Math.round(rep)),
-      network: a.network || 'Base',
-      price: a.price || '—',
-      endpoints: a.endpoints || [],
-      isOurs: false,
-      size: 0.7 + (Math.min(rep, 100) / 100) * 1.4,
-      color: 0x111111,
-      _raw: a._raw || a,
-    });
+// ── XGATE AGENT DECODER ──────────────────────────
+function decodeXgate(raw) {
+  let name = raw.name || null;
+  let description = '';
+  let x402 = false;
+  const uri = raw.tokenUri || '';
+  if (uri.startsWith('data:application/json;base64,')) {
+    try {
+      const m = JSON.parse(atob(uri.split(',',1)[1].replace(/\s/g,'')+
+        '=='.slice(0,(4-uri.split(',',1)[1].replace(/\s/g,'').length%4)%4)));
+      // fix: just use plain atob
+      const meta = JSON.parse(atob(uri.split(',')[1]));
+      name = name || meta.name;
+      description = meta.description || '';
+      x402 = meta.x402Support || false;
+    } catch(e) {
+      try {
+        const meta = JSON.parse(atob(uri.split(',')[1]));
+        name = name || meta.name;
+        description = meta.description || '';
+        x402 = meta.x402Support || false;
+      } catch(e2){}
+    }
+  }
+  return {
+    id: String(raw.agentId || raw.agentKey),
+    name: name || `Agent #${raw.agentId}`,
+    description,
+    reputationScore: raw.reputationScore || 0,
+    rankScore: Math.round(raw.rankScore || 0),
+    chainId: raw.chainId,
+    network: chainName(raw.chainId),
+    x402,
+    wallet: raw.wallet,
+    lastUpdatedAt: raw.lastUpdatedAt,
+    endpoints: [],
+    isOurs: false,
+    _raw: raw,
   };
-
-  (xgateAgents || []).forEach(add);
-  (scanAgents || []).slice(0, 100).forEach(a => add({
-    id: a.id,
-    name: a.name,
-    description: a.description,
-    reputation: a.total_score || a.average_score || 50,
-    network: a.chain_id === 8453 ? 'Base' : a.chain_id === 1 ? 'Ethereum' : 'Base',
-  }));
-
-  if (nodeList.length <= 2) MOCK_AGENTS.forEach(add);
-  return nodeList;
 }
 
-function buildEdgesFromFeedbacks(nodeList, feedbacks) {
-  const edgeMap = {};
-
-  // 8004scan feedback: agent_id=UUID of target agent, user_address=caller wallet
-  // Strategy: agents co-used by the same user_address → draw edge between them
-  // This represents real "co-usage" in the ecosystem
-
-  const idxById = {};
-  nodeList.forEach((n, i) => {
-    if (n.id) idxById[String(n.id)] = i;
-  });
-
-  // Group feedbacks by user_address → collect agent indices
-  const userAgents = {};
-  feedbacks.forEach(fb => {
-    const user = fb.user_address;
-    const agIdx = idxById[fb.agent_id];
-    if (!user || agIdx === undefined) return;
-    if (!userAgents[user]) userAgents[user] = new Set();
-    userAgents[user].add(agIdx);
-  });
-
-  // For each user that used multiple agents → edges between those agents
-  Object.values(userAgents).forEach(agSet => {
-    const arr = [...agSet];
-    if (arr.length < 2) return;
-    for (let i = 0; i < arr.length; i++) {
-      for (let j = i + 1; j < arr.length; j++) {
-        const k = `${Math.min(arr[i],arr[j])}-${Math.max(arr[i],arr[j])}`;
-        if (!edgeMap[k]) edgeMap[k] = { from: arr[i], to: arr[j], weight: 0, txs: [] };
-        edgeMap[k].weight += 1;
-      }
-    }
-  });
-
-  // Also: store relevant feedbacks per edge
-  feedbacks.forEach(fb => {
-    const agIdx = idxById[fb.agent_id];
-    if (agIdx === undefined) return;
-    const user = fb.user_address;
-    const coAgents = userAgents[user] ? [...userAgents[user]] : [];
-    coAgents.forEach(other => {
-      if (other === agIdx) return;
-      const k = `${Math.min(agIdx,other)}-${Math.max(agIdx,other)}`;
-      if (edgeMap[k]) edgeMap[k].txs.push(fb);
-    });
-  });
-
-  const edgeList = Object.values(edgeMap);
-  const maxW = edgeList.reduce((m, e) => Math.max(m, e.weight), 1);
-  edgeList.forEach(e => { e.weight = Math.min(e.weight / maxW, 1); });
-
-  // Ensure our agents are wired (fallback synthetic edges)
-  [0, 1].forEach(ourIdx => {
-    if (!edgeList.some(e => e.from === ourIdx || e.to === ourIdx)) {
-      for (let k = 0; k < 4; k++) {
-        const t = 2 + Math.floor(Math.random() * Math.max(1, nodeList.length - 2));
-        edgeList.push({ from: ourIdx, to: t, weight: 0.5, txs: [], synthetic: true });
-      }
-    }
-  });
-
-  return edgeList;
-}
-
-// 8004scan wraps everything in { success, data, meta }
-// xgate returns { query, total, results, diagnostics }
-function unpack8004scan(raw) {
-  if (!raw) return { arr: null, total: 0 };
-  if (raw.success !== undefined) {
-    const arr = Array.isArray(raw.data) ? raw.data : null;
-    const total = raw.meta?.pagination?.total || (arr ? arr.length : 0);
-    return { arr, total };
-  }
-  if (Array.isArray(raw)) return { arr: raw, total: raw.length };
-  return { arr: null, total: 0 };
-}
-
-function unpackXgate(raw) {
-  if (!raw) return { arr: null };
-  if (Array.isArray(raw.results)) return { arr: raw.results };
-  if (Array.isArray(raw)) return { arr: raw };
-  return { arr: null };
-}
-
-function indexFeedbacksByAgent(fbs) {
-  const map = {};
-  fbs.forEach(fb => {
-    const id = fb.agent_id;
-    if (!id) return;
-    if (!map[id]) map[id] = [];
-    map[id].push(fb);
-  });
-  return map;
-}
-
-async function loadData() {
-  setLoadingStatus('Fetching xgate agents (1/4)…', 5);
-
-  // ── xgate: paginate 4 × 50 = up to 200 agents ──────────────────
-  // Max limit=50, total field = page count (not grand total)
-  let xgateDecoded = [];
-  for (let offset = 0; offset < 200; offset += 50) {
-    const raw = await fetchWithCache(
-      `https://api.xgate.run/agents?limit=50&offset=${offset}`
+// ── LOAD XGATE AGENTS ────────────────────────────
+// Max limit=50, paginate until empty — actual total ~200
+async function loadXgateAgents() {
+  const all = [];
+  for (let offset = 0; offset <= 200; offset += 50) {
+    const raw = await apiFetch(
+      `https://api.xgate.run/agents?limit=50&offset=${offset}`,
+      120000  // cache 2 min
     );
-    const { arr } = unpackXgate(raw);
-    if (!arr || arr.length === 0) break;
-    arr.forEach(a => xgateDecoded.push(decodeXgateAgent(a)));
-    setLoadingStatus(`Fetching xgate agents (${xgateDecoded.length})…`,
-      5 + Math.round(xgateDecoded.length / 2));
-    if (arr.length < 50) break;  // last page
+    const results = raw?.results || [];
+    if (!results.length) break;
+    results.forEach(r => all.push(decodeXgate(r)));
+    if (results.length < 50) break;
+    // small delay to be polite (not rate-limit xgate)
+    await new Promise(r => setTimeout(r, 400));
   }
-  console.log('[xgate] total fetched:', xgateDecoded.length);
+  return all;
+}
 
-  // ── 8004scan agents (for supplement + real total count) ─────────
-  setLoadingStatus('Fetching 8004scan agents…', 58);
-  const scanRaw = await fetchWithCache('https://8004scan.io/api/v1/public/agents');
-  const { arr: scanArr, total: scanTotal } = unpack8004scan(scanRaw);
-  console.log('[8004scan] agents:', scanArr?.length, '/ total:', scanTotal);
-
-  // ── 8004scan stats ───────────────────────────────────────────────
-  setLoadingStatus('Fetching stats…', 68);
-  const statsRaw  = await fetchWithCache('https://8004scan.io/api/v1/public/stats');
-  const { arr: statsArr } = unpack8004scan(statsRaw);
-  // stats endpoint may return a flat object or wrapped
-  const stats = statsArr ? statsArr[0] : (
-    statsRaw?.data && !Array.isArray(statsRaw.data) ? statsRaw.data :
-    (typeof statsRaw === 'object' && !statsRaw.success ? statsRaw : null)
+// ── LOAD FEEDBACKS ────────────────────────────────
+async function loadFeedbacks(limit = 30) {
+  const raw = await apiFetch(
+    `https://8004scan.io/api/v1/public/feedbacks?limit=${limit}`,
+    0  // always fresh
   );
+  return raw?.data || [];
+}
 
-  // ── 8004scan feedbacks (for edges + activity) ────────────────────
-  setLoadingStatus('Fetching feedbacks…', 76);
-  const fbRaw = await fetchWithCache('https://8004scan.io/api/v1/public/feedbacks');
-  const { arr: fbArr, total: fbTotal } = unpack8004scan(fbRaw);
-  const feedbacks = fbArr || [];
-  console.log('[8004scan] feedbacks:', feedbacks.length, '/ total:', fbTotal);
+// ── LOAD STATS ────────────────────────────────────
+async function loadStats() {
+  const raw = await apiFetch('https://8004scan.io/api/v1/public/feedbacks?limit=1', 60000);
+  return {
+    feedbackTotal: raw?.meta?.pagination?.total || 0
+  };
+}
 
-  // ── Build nodes ──────────────────────────────────────────────────
-  setLoadingStatus('Building network…', 84);
-  nodes = buildAgentNodes(xgateDecoded, scanArr);
-  nodes.forEach(n => { agentMap[n.id] = n; });
-
-  // ── Build edges from co-usage ────────────────────────────────────
-  allFeedbacks   = feedbacks;
-  agentFeedbacks = indexFeedbacksByAgent(feedbacks);
-  edges          = buildEdgesFromFeedbacks(nodes, feedbacks);
-
-  // ── Stats display ────────────────────────────────────────────────
-  // Grand total: 8004scan meta.pagination.total is authoritative (272k+)
-  const displayTotal = scanTotal || xgateDecoded.length || MOCK_STATS.totalAgents;
-  const displayActive =
-    (stats && (stats.activeNow || stats.active_now || stats.active_agents)) ||
-    Math.round(displayTotal * 0.36);
-  const displayTxns = fbTotal || feedbacks.length || MOCK_STATS.transactions;
-  const displayVol  =
-    (stats && (stats.volume || stats.totalVolume || stats.total_volume)) ||
-    MOCK_STATS.volume;
-
-  updateStats({
-    totalAgents: displayTotal.toLocaleString(),
-    activeNow: displayActive.toLocaleString(),
-    volume: displayVol,
-    transactions: displayTxns.toLocaleString()
-  });
-
-  setLoadingStatus('Rendering…', 92);
-  updateTopAgents();
-
-  if (feedbacks.length) {
-    const items = feedbacks.slice(0, 5).map(f => ({
-      time: timeAgo(f.submitted_at || f.created_at),
-      text: (f.agent?.name || f.agent_id?.slice(0,8) || '?') +
-            ' · score ' + (f.score || '—') +
-            (f.endpoint ? ' · ' + new URL(f.endpoint).hostname : '')
-    }));
-    updateActivity(items);
-  } else {
-    updateActivity(MOCK_ACTIVITY);
+// ── AGENT LIST ────────────────────────────────────
+function renderAgentList(list) {
+  const wrap = document.getElementById('agent-list-wrap');
+  if (!list.length) {
+    wrap.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:11px;">No agents found</div>';
+    return;
   }
-
-  return { nodes, edges };
+  wrap.innerHTML = list.map(a => {
+    const sc = a.reputationScore;
+    const scClass = sc >= 80 ? 'score-hi' : sc >= 50 ? 'score-mid' : 'score-lo';
+    const col = agentColor(a.name);
+    return `
+      <div class="al-item ${selectedAgent?.id === a.id ? 'selected':''}"
+           onclick="openDetail('${a.id}')">
+        <div class="al-avatar" style="background:${col}">${initials(a.name)}</div>
+        <div class="al-info">
+          <div class="al-name">${esc(a.name)}</div>
+          <div class="al-meta">${a.network} · #${a.id}</div>
+        </div>
+        <div class="al-score ${scClass}">${sc}</div>
+      </div>`;
+  }).join('');
 }
 
-// ===================================================
-// UI UPDATES
-// ===================================================
-function updateStats(s) {
-  const fmt = v => (v === undefined || v === null || v === 0) ? '—' : String(v);
-  document.getElementById('stat-agents').textContent = fmt(s.totalAgents);
-  document.getElementById('stat-active').textContent = fmt(s.activeNow);
-  document.getElementById('stat-volume').textContent = fmt(s.volume);
-  document.getElementById('stat-txns').textContent   = fmt(s.transactions);
+function filterAgents(q) {
+  q = q.toLowerCase().trim();
+  filteredList = q
+    ? xgateAgents.filter(a => a.name.toLowerCase().includes(q) || String(a.id).includes(q))
+    : xgateAgents;
+  renderAgentList(filteredList);
 }
 
-function updateTopAgents() {
-  const sorted = [...nodes].sort((a, b) => (b.reputation || 0) - (a.reputation || 0)).slice(0, 5);
-  const el = document.getElementById('top-agents-list');
-  el.innerHTML = sorted.map((a, i) => `
-    <div class="agent-row" onclick="selectNodeByName('${a.name}')">
-      <span class="agent-rank">${i + 1}</span>
-      <span class="agent-dot ${a.isOurs ? 'our' : ''}"></span>
-      <div class="agent-info">
-        <div class="agent-name">${a.name}</div>
-        <div class="agent-rep">${a.reputation || '?'}/100</div>
-        <div class="rep-bar"><div class="rep-fill" style="width:${a.reputation || 0}%"></div></div>
+// ── LIVE FEED ─────────────────────────────────────
+function scoreTag(score) {
+  const s = Number(score);
+  if (s >= 80) return `<span class="tag score-hi">score ${s}</span>`;
+  if (s >= 50) return `<span class="tag score-mid">score ${s}</span>`;
+  return `<span class="tag">score ${s}</span>`;
+}
+
+function renderFeedItem(fb) {
+  const agentName = fb.agent?.name || `Agent ${fb.agent_id?.slice(0,8)}`;
+  const col = agentColor(agentName);
+  const ini = initials(agentName);
+  const host = fb.endpoint ? (() => { try { return new URL(fb.endpoint).hostname; } catch(e){ return fb.endpoint; }})() : '';
+  const txHash = fb.transaction_hash || '';
+  const txShort = txHash ? txHash.slice(0,8)+'…'+txHash.slice(-6) : '';
+  const userShort = fb.user_address ? fb.user_address.slice(0,6)+'…'+fb.user_address.slice(-4) : '?';
+  const chain = fb.chain_id === 8453 ? 'Base' : fb.chain_id ? `Chain ${fb.chain_id}` : '';
+  const t = timeAgo(fb.submitted_at || fb.created_at);
+  const baseUrl = fb.chain_id === 8453 ? 'https://basescan.org/tx/' : 'https://etherscan.io/tx/';
+  const agId = fb.agent_id || '';
+
+  return `
+<div class="fc" onclick="openDetailByAgentId('${esc(agId)}','${esc(agentName)}')">
+  <div class="fc-top">
+    <div class="fc-avatar" style="background:${col}">${ini}</div>
+    <div class="fc-body">
+      <div class="fc-name">${esc(agentName)}</div>
+      ${host ? `<div class="fc-endpoint">${esc(host)}</div>` : ''}
+      <div class="fc-row">
+        ${scoreTag(fb.score)}
+        ${fb.tag1 ? `<span class="tag">${esc(fb.tag1)}</span>` : ''}
+        ${fb.tag2 ? `<span class="tag">${esc(fb.tag2)}</span>` : ''}
+        ${chain ? `<span class="tag">${chain}</span>` : ''}
+      </div>
+      <div class="fc-meta">
+        <span class="fc-user">${userShort}</span>
+        ${txHash
+          ? ` → <a class="fc-tx" href="${baseUrl}${txHash}" target="_blank" onclick="event.stopPropagation()">${txShort}</a>`
+          : ''}
+        <span class="fc-time" style="float:right">${t}</span>
       </div>
     </div>
-  `).join('');
+  </div>
+</div>`;
 }
 
-function updateActivity(items) {
-  const el = document.getElementById('activity-list');
-  el.innerHTML = items.map(item => `
-    <div class="activity-item">
-      <div class="activity-time">${item.time}</div>
-      <div class="activity-text">${item.text}</div>
-    </div>
-  `).join('');
-}
+async function refreshFeed() {
+  const feedbacks = await loadFeedbacks(30);
+  if (!feedbacks.length) return;
 
-function openRightPanel(node) {
-  selectedNode = node;
-  document.getElementById('rp-name').textContent = node.name;
-  document.getElementById('rp-desc').textContent = node.description || '—';
-  document.getElementById('rp-network').textContent = node.network || 'Base';
-  document.getElementById('rp-price').textContent = node.price || '—';
-  document.getElementById('rp-rep').textContent = (node.reputation || '?') + '/100';
+  const wrap = document.getElementById('feed-wrap');
+  const loadingEl = document.getElementById('feed-loading');
+  if (loadingEl) loadingEl.remove();
 
-  const hEl = document.getElementById('rp-health');
-  hEl.textContent = node.isOurs ? 'Online' : (Math.random() > 0.15 ? 'Online' : 'Unknown');
-  hEl.className = 'rp-field-value health-online';
-
-  // Endpoints
-  const epEl = document.getElementById('rp-endpoints');
-  if (node.endpoints && node.endpoints.length) {
-    epEl.innerHTML = node.endpoints.map(ep => `
-      <div class="endpoint-row" style="border-top:1px solid var(--border);margin-bottom:4px;">
-        <div style="flex:1;min-width:0;">
-          <div class="endpoint-path">${ep.path}</div>
-          <div class="endpoint-desc">${ep.desc || ep.description || ''}</div>
-        </div>
-        <span class="endpoint-price">${ep.price}</span>
-      </div>
-    `).join('');
-  } else {
-    epEl.innerHTML = '';
+  // prepend new items
+  let newCount = 0;
+  const fragment = document.createDocumentFragment();
+  for (const fb of feedbacks) {
+    const uid = fb.id || fb.feedback_id || Math.random();
+    if (seenFeedIds.has(uid)) continue;
+    seenFeedIds.add(uid);
+    const div = document.createElement('div');
+    div.innerHTML = renderFeedItem(fb);
+    fragment.appendChild(div.firstElementChild);
+    newCount++;
   }
+  if (newCount > 0) {
+    wrap.insertBefore(fragment, wrap.firstChild);
+    // trim to 80 items max
+    while (wrap.children.length > 80) wrap.removeChild(wrap.lastChild);
+  }
+}
 
-  // Transaction history for this node
-  const txEl = document.getElementById('rp-transactions');
-  const nodeTxs = (agentFeedbacks[node.id] || []).slice(0, 8);
-  // Also look for edges involving this node
-  const nodeIdx = nodes.indexOf(node);
-  const connectedEdges = edges.filter(e =>
-    (e.from === nodeIdx || e.to === nodeIdx) && e.txs && e.txs.length
+// ── DETAIL PANEL ─────────────────────────────────
+async function openDetail(agentId) {
+  const agent = agentById[agentId];
+  if (!agent) return;
+  _showDetail(agent);
+  // fetch feedbacks for this agent
+  const raw = await apiFetch(
+    `https://8004scan.io/api/v1/public/feedbacks?agent_id=${agentId}&limit=10`,
+    30000
   );
-  const edgeTxs = connectedEdges.flatMap(e => e.txs).slice(0, 8);
-  const txList = nodeTxs.length ? nodeTxs : edgeTxs;
+  const fbs = raw?.data || [];
+  renderDetailTxs(fbs);
+}
 
-  if (txList.length) {
-    txEl.innerHTML = `
-      <div class="rp-divider"></div>
-      <div class="section-title" style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Recent Transactions</div>
-      ${txList.map(tx => `
-        <div style="padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;">
-          <div style="display:flex;justify-content:space-between;">
-            <span style="color:var(--text-muted);font-family:monospace;">${timeAgo(tx.timestamp||tx.created_at||tx.createdAt)}</span>
-            <span style="font-family:monospace;color:var(--accent);">${tx.amount ? tx.amount+' USDC' : ''}</span>
-          </div>
-          <div style="margin-top:2px;color:var(--text);">${
-            tx.message || tx.comment || tx.text ||
-            ((tx.from_agent||tx.caller||'') + (tx.to_agent||tx.agent_id ? ' → '+(tx.to_agent||tx.agent_id) : ''))
-            || 'Transaction'
-          }</div>
-          ${tx.status ? `<div style="font-size:10px;color:#27ae60;margin-top:1px;">${tx.status}</div>` : ''}
-        </div>
-      `).join('')}
-    `;
-  } else {
-    txEl.innerHTML = `
-      <div class="rp-divider"></div>
-      <div style="font-size:11px;color:var(--text-muted);text-align:center;padding:8px 0;">No transaction history available</div>
-    `;
+async function openDetailByAgentId(agentId, agentName) {
+  // try from xgate list first
+  let agent = agentById[agentId];
+  if (!agent) {
+    // create minimal agent object from feed data
+    agent = {
+      id: agentId, name: agentName,
+      description: '', reputationScore: 0, rankScore: 0,
+      network: 'Base', chainId: 8453, x402: false,
+      endpoints: [], isOurs: false,
+    };
   }
-
-  const invokeUrl = node.host
-    ? `https://${node.host}${(node.endpoints && node.endpoints[0]) ? node.endpoints[0].path : ''}`
-    : '#';
-  document.getElementById('rp-invoke').href = invokeUrl;
-
-  document.getElementById('right-panel').classList.add('open');
-  if (renderer) renderer.setSize(
-    document.getElementById('canvas-container').offsetWidth,
-    document.getElementById('canvas-container').offsetHeight
+  _showDetail(agent);
+  const raw = await apiFetch(
+    `https://8004scan.io/api/v1/public/feedbacks?agent_id=${agentId}&limit=10`,
+    30000
   );
+  const fbs = raw?.data || [];
+  renderDetailTxs(fbs);
 }
 
-function closeRightPanel() {
-  document.getElementById('right-panel').classList.remove('open');
-  selectedNode = null;
-  if (renderer) {
-    setTimeout(() => renderer.setSize(
-      document.getElementById('canvas-container').offsetWidth,
-      document.getElementById('canvas-container').offsetHeight
-    ), 260);
+function _showDetail(agent) {
+  selectedAgent = agent;
+  const col = agentColor(agent.name);
+  document.getElementById('rp-av').textContent    = initials(agent.name);
+  document.getElementById('rp-av').style.background = col;
+  document.getElementById('rp-name').textContent  = agent.name;
+  document.getElementById('rp-desc').textContent  = agent.description || '—';
+  document.getElementById('rp-net').textContent   = agent.network || '—';
+  document.getElementById('rp-chain').textContent = agent.chainId ? `${agent.chainId}` : '—';
+  document.getElementById('rp-rep').textContent   = agent.reputationScore ? `${agent.reputationScore}/100` : '—';
+  document.getElementById('rp-rank').textContent  = agent.rankScore ? `${agent.rankScore}` : '—';
+  document.getElementById('rp-x402').textContent  = agent.x402 ? '✓ Supported' : '—';
+  document.getElementById('rp-updated').textContent =
+    agent.lastUpdatedAt ? timeAgo(agent.lastUpdatedAt) : '—';
+
+  // endpoints
+  const epSec = document.getElementById('rp-ep-sec');
+  const epEl  = document.getElementById('rp-eps');
+  if (agent.endpoints && agent.endpoints.length) {
+    epSec.style.display = '';
+    epEl.innerHTML = agent.endpoints.map(ep => `
+      <div class="rp-field" style="flex-direction:column;align-items:flex-start;gap:2px;padding:5px 0;border-bottom:1px solid var(--border);">
+        <span style="font-family:monospace;font-size:10px;color:var(--navy);">${esc(ep.path)}</span>
+        <span style="font-size:10px;color:var(--muted);">${esc(ep.desc||'')} <b style="color:var(--accent)">${esc(ep.price||'')}</b></span>
+      </div>`).join('');
+  } else { epSec.style.display = 'none'; }
+
+  // invoke
+  const invokeBtn = document.getElementById('rp-invoke');
+  const invokeUrl = agent.host
+    ? `https://${agent.host}${agent.endpoints?.[0]?.path || ''}`
+    : agent.endpoints?.[0] ? '#' : null;
+  if (invokeUrl) {
+    invokeBtn.href = invokeUrl;
+    invokeBtn.style.display = '';
+  } else { invokeBtn.style.display = 'none'; }
+
+  // placeholder txs while loading
+  document.getElementById('rp-txs').innerHTML =
+    '<div style="color:var(--muted);font-size:11px;padding:4px 0;">Loading…</div>';
+
+  document.getElementById('right').classList.add('open');
+  // highlight in list
+  document.querySelectorAll('.al-item').forEach(el => el.classList.remove('selected'));
+  // can't easily target by id in innerHTML, so just re-render list
+}
+
+function renderDetailTxs(fbs) {
+  const el = document.getElementById('rp-txs');
+  if (!fbs.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:4px 0;">No feedbacks found</div>';
+    return;
   }
+  el.innerHTML = fbs.map(fb => {
+    const t = timeAgo(fb.submitted_at || fb.created_at);
+    const userShort = fb.user_address ? fb.user_address.slice(0,6)+'…'+fb.user_address.slice(-4) : '?';
+    const txHash = fb.transaction_hash || '';
+    const baseUrl = fb.chain_id === 8453 ? 'https://basescan.org/tx/' : 'https://etherscan.io/tx/';
+    const sc = fb.score || 0;
+    const scColor = sc >= 80 ? '#27ae60' : sc >= 50 ? 'var(--accent)' : 'var(--muted)';
+    return `
+      <div class="rp-tx-item">
+        <div style="display:flex;justify-content:space-between;">
+          <span style="font-family:monospace;font-size:10px;font-weight:700;color:${scColor}">score ${sc}</span>
+          <span style="font-size:10px;color:var(--muted);font-family:monospace">${t}</span>
+        </div>
+        <div style="margin-top:2px;font-size:10px;font-family:monospace;color:var(--muted)">
+          from <b style="color:var(--navy)">${userShort}</b>
+        </div>
+        ${fb.tag1 ? `<div style="margin-top:2px;font-size:10px;color:var(--muted)">${esc(fb.tag1)}${fb.tag2?' · '+esc(fb.tag2):''}</div>` : ''}
+        ${txHash
+          ? `<a href="${baseUrl}${txHash}" target="_blank" style="font-family:monospace;font-size:10px;color:var(--accent);">${txHash.slice(0,10)}…</a>`
+          : ''}
+      </div>`;
+  }).join('');
 }
 
-function selectNodeByName(name) {
-  const node = nodes.find(n => n.name === name);
-  if (node && node._mesh) {
-    openRightPanel(node);
-    // Camera fly-to
-    const pos = node._mesh.position;
-    camera.position.set(pos.x + 5, pos.y + 5, pos.z + 15);
-    controls.target.copy(pos);
-  }
+function closeDetail() {
+  document.getElementById('right').classList.remove('open');
+  selectedAgent = null;
 }
 
-function copyEndpoint(btn, url) {
+// ── UTILS ─────────────────────────────────────────
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function timeAgo(ts) {
+  if (!ts) return '';
+  const d = (Date.now() - new Date(ts).getTime()) / 1000;
+  if (d < 60) return Math.floor(d)+'s ago';
+  if (d < 3600) return Math.floor(d/60)+'m ago';
+  if (d < 86400) return Math.floor(d/3600)+'h ago';
+  return Math.floor(d/86400)+'d ago';
+}
+function copyUrl(btn, url) {
   navigator.clipboard.writeText(url).then(() => {
-    btn.textContent = 'copied!';
-    btn.classList.add('copied');
+    btn.textContent = 'copied!'; btn.classList.add('copied');
     setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
   });
 }
 
-// ===================================================
-// THREE.JS 3D GRAPH
-// ===================================================
-let scene, camera, renderer, controls, animId;
-let nodeMeshes = [], edgeLines = [];
-let particles = [];
-let raycaster, mouse;
-let isDragging = false, prevMouse = { x: 0, y: 0 };
-let sphericalTheta = 0, sphericalPhi = Math.PI / 3;
-let sphericalRadius = 300;
-let targetRadius = 300;
-
-function initThree() {
-  const container = document.getElementById('canvas-container');
-  const W = container.offsetWidth, H = container.offsetHeight;
-
-  scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(70, W / H, 1, 5000);
-  camera.position.set(0, 80, 300);
-
-  renderer = new THREE.WebGLRenderer({
-    canvas: document.getElementById('three-canvas'),
-    antialias: true,
-    alpha: true
-  });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(W, H);
-  renderer.setClearColor(0x000000, 0);
-
-  // Lights
-  const ambient = new THREE.AmbientLight(0xeef6fd, 1.2);
-  scene.add(ambient);
-  const dir = new THREE.DirectionalLight(0x2980d9, 0.8);
-  dir.position.set(10, 20, 10);
-  scene.add(dir);
-
-  raycaster = new THREE.Raycaster();
-  mouse = new THREE.Vector2(-999, -999);
-
-  setupInteraction(container);
-  window.addEventListener('resize', onResize);
-}
-
-function setupInteraction(container) {
-  container.addEventListener('mousedown', e => {
-    isDragging = false;
-    prevMouse = { x: e.clientX, y: e.clientY };
-    container.addEventListener('mousemove', onDrag);
-    container.addEventListener('mouseup', onMouseUp);
-  });
-
-  container.addEventListener('mousemove', e => {
-    const rect = container.getBoundingClientRect();
-    mouse.x = ((e.clientX - rect.left) / container.offsetWidth) * 2 - 1;
-    mouse.y = -((e.clientY - rect.top) / container.offsetHeight) * 2 + 1;
-    updateTooltip(e);
-  });
-
-  container.addEventListener('wheel', e => {
-    e.preventDefault();
-    targetRadius = Math.max(50, Math.min(800, targetRadius + e.deltaY * 0.4));
-  }, { passive: false });
-
-  container.addEventListener('click', onCanvasClick);
-
-  document.getElementById('zoom-in').onclick = () => targetRadius = Math.max(50, targetRadius - 30);
-  document.getElementById('zoom-out').onclick = () => targetRadius = Math.min(800, targetRadius + 30);
-}
-
-function onDrag(e) {
-  const dx = e.clientX - prevMouse.x;
-  const dy = e.clientY - prevMouse.y;
-  if (Math.abs(dx) > 2 || Math.abs(dy) > 2) isDragging = true;
-  sphericalTheta -= dx * 0.008;
-  sphericalPhi = Math.max(0.2, Math.min(Math.PI - 0.2, sphericalPhi + dy * 0.008));
-  prevMouse = { x: e.clientX, y: e.clientY };
-}
-
-function onMouseUp() {
-  document.getElementById('canvas-container').removeEventListener('mousemove', onDrag);
-  document.getElementById('canvas-container').removeEventListener('mouseup', onMouseUp);
-}
-
-function updateTooltip(e) {
-  if (!scene || !camera) return;
-  raycaster.setFromCamera(mouse, camera);
-  const hits = raycaster.intersectObjects(nodeMeshes);
-  const tooltip = document.getElementById('tooltip');
-
-  if (hits.length) {
-    const node = hits[0].object.userData.node;
-    if (node) {
-      tooltip.style.display = 'block';
-      tooltip.style.left = (e.offsetX + 12) + 'px';
-      tooltip.style.top = (e.offsetY + 12) + 'px';
-      document.getElementById('tooltip-name').textContent = node.name;
-      document.getElementById('tooltip-info').textContent =
-        `Rep: ${node.reputation || '?'}/100 · ${node.network || 'Base'}`;
+// ── COUNTDOWN ────────────────────────────────────
+function startCountdown() {
+  nextRefreshSec = 15;
+  clearInterval(refreshTimer);
+  refreshTimer = setInterval(() => {
+    nextRefreshSec--;
+    document.getElementById('next-refresh').textContent = nextRefreshSec + 's';
+    if (nextRefreshSec <= 0) {
+      nextRefreshSec = 15;
+      refreshFeed();
     }
-    document.getElementById('canvas-container').style.cursor = 'pointer';
-  } else {
-    tooltip.style.display = 'none';
-    document.getElementById('canvas-container').style.cursor = 'default';
-  }
+  }, 1000);
 }
 
-function onCanvasClick() {
-  if (isDragging) { isDragging = false; return; }
-  raycaster.setFromCamera(mouse, camera);
-  const hits = raycaster.intersectObjects(nodeMeshes);
-  if (hits.length) {
-    openRightPanel(hits[0].object.userData.node);
-  }
-}
-
-function onResize() {
-  const container = document.getElementById('canvas-container');
-  const W = container.offsetWidth, H = container.offsetHeight;
-  camera.aspect = W / H;
-  camera.updateProjectionMatrix();
-  renderer.setSize(W, H);
-}
-
-// ===================================================
-// GRAPH BUILDING
-// ===================================================
-function forceLayout(nodes, iterations = 150) {
-  const n = nodes.length;
-  // Initialize positions
-  nodes.forEach((node, i) => {
-    if (!node.px) {
-      const angle = (i / n) * Math.PI * 2;
-      const radius = 80 + Math.random() * 60;
-      node.px = Math.cos(angle) * radius;
-      node.py = (Math.random() - 0.5) * 80;
-      node.pz = Math.sin(angle) * radius;
-      node.vx = node.vy = node.vz = 0;
-    }
-  });
-
-  // Run force simulation
-  for (let iter = 0; iter < iterations; iter++) {
-    const k = iter / iterations;
-    const temp = 3 * (1 - k);
-
-    // Repulsion
-    for (let i = 0; i < n; i++) {
-      for (let j = i + 1; j < n; j++) {
-        const dx = nodes[i].px - nodes[j].px;
-        const dy = nodes[i].py - nodes[j].py;
-        const dz = nodes[i].pz - nodes[j].pz;
-        const dist2 = dx*dx + dy*dy + dz*dz + 0.01;
-        const force = 4000 / dist2;
-        nodes[i].vx += dx * force; nodes[j].vx -= dx * force;
-        nodes[i].vy += dy * force; nodes[j].vy -= dy * force;
-        nodes[i].vz += dz * force; nodes[j].vz -= dz * force;
-      }
-    }
-
-    // Apply velocities
-    nodes.forEach(node => {
-      const speed = Math.sqrt(node.vx*node.vx + node.vy*node.vy + node.vz*node.vz);
-      if (speed > temp) {
-        node.vx = (node.vx / speed) * temp;
-        node.vy = (node.vy / speed) * temp;
-        node.vz = (node.vz / speed) * temp;
-      }
-      node.px += node.vx;
-      node.py += node.vy;
-      node.pz += node.vz;
-      node.vx *= 0.7; node.vy *= 0.7; node.vz *= 0.7;
-    });
-  }
-}
-
-function buildGraph() {
-  // Clear old
-  nodeMeshes.forEach(m => scene.remove(m));
-  edgeLines.forEach(l => scene.remove(l));
-  particles.forEach(p => scene.remove(p));
-  nodeMeshes = []; edgeLines = []; particles = [];
-
-  forceLayout(nodes);
-
-  // Create edges as tubes (LineBasicMaterial ignores linewidth in WebGL)
-  edges.forEach(edge => {
-    const from = nodes[edge.from];
-    const to = nodes[edge.to];
-    if (!from || !to) return;
-
-    const vFrom = new THREE.Vector3(from.px, from.py, from.pz);
-    const vTo   = new THREE.Vector3(to.px,   to.py,   to.pz);
-    const curve  = new THREE.LineCurve3(vFrom, vTo);
-    // tube radius: 0.06 for normal edges, 0.12 for high-weight edges
-    const tubeR = 0.05 + edge.weight * 0.10;
-    const geo   = new THREE.TubeGeometry(curve, 1, tubeR, 5, false);
-    const opacity = 0.55 + edge.weight * 0.35;
-    const mat   = new THREE.MeshBasicMaterial({
-      color: 0x1e3a6e,
-      transparent: true,
-      opacity
-    });
-    const tube = new THREE.Mesh(geo, mat);
-    tube.userData = { edge, from, to };
-    scene.add(tube);
-    edgeLines.push(tube);
-  });
-
-  // Create nodes
-  nodes.forEach(node => {
-    const geo = new THREE.SphereGeometry(node.size * 0.5, 20, 20);
-    const mat = new THREE.MeshPhongMaterial({
-      color: node.color,
-      shininess: 80,
-      emissive: node.isOurs ? 0x222222 : 0x111111,
-      emissiveIntensity: node.isOurs ? 0.5 : 0.2
-    });
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(node.px, node.py, node.pz);
-    mesh.userData.node = node;
-    node._mesh = mesh;
-    scene.add(mesh);
-    nodeMeshes.push(mesh);
-
-    // Label for our agents (using sprite)
-    if (node.isOurs) {
-      const sprite = makeLabel(node.name);
-      sprite.position.set(node.px, node.py + node.size * 0.5 + 1.2, node.pz);
-      scene.add(sprite);
-    }
-
-    // Pulse ring for our agents
-    if (node.isOurs) {
-      const ringGeo = new THREE.RingGeometry(node.size * 0.55, node.size * 0.65, 32);
-      const ringMat = new THREE.MeshBasicMaterial({
-        color: 0x1e3a6e,
-        transparent: true,
-        opacity: 0.6,
-        side: THREE.DoubleSide
-      });
-      const ring = new THREE.Mesh(ringGeo, ringMat);
-      ring.position.copy(mesh.position);
-      ring.userData.isRing = true;
-      ring.userData.node = node;
-      scene.add(ring);
-    }
-  });
-}
-
-function makeLabel(text) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 256; canvas.height = 64;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, 256, 64);
-  ctx.fillStyle = 'rgba(255,255,255,0.9)';
-  ctx.fillRect(0, 16, 256, 32);
-  ctx.fillStyle = '#2980d9';
-  ctx.font = 'bold 22px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText(text, 128, 37);
-
-  const tex = new THREE.CanvasTexture(canvas);
-  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
-  const sprite = new THREE.Sprite(mat);
-  sprite.scale.set(4, 1, 1);
-  return sprite;
-}
-
-// ===================================================
-// PAYMENT FLOW PARTICLES
-// ===================================================
-function spawnParticle(fromNode, toNode) {
-  const geo = new THREE.SphereGeometry(0.12, 8, 8);
-  const mat = new THREE.MeshBasicMaterial({ color: 0x2980d9 });
-  const mesh = new THREE.Mesh(geo, mat);
-
-  const from = new THREE.Vector3(fromNode.px, fromNode.py, fromNode.pz);
-  const to = new THREE.Vector3(toNode.px, toNode.py, toNode.pz);
-
-  mesh.position.copy(from);
-  scene.add(mesh);
-
-  particles.push({ mesh, from, to, t: 0, speed: 0.008 + Math.random() * 0.01 });
-}
-
-function updateParticles() {
-  particles = particles.filter(p => {
-    p.t += p.speed;
-    if (p.t >= 1) {
-      scene.remove(p.mesh);
-      return false;
-    }
-    p.mesh.position.lerpVectors(p.from, p.to, p.t);
-    // Arc
-    const arc = Math.sin(p.t * Math.PI) * 1.5;
-    p.mesh.position.y += arc;
-    return true;
-  });
-}
-
-// Spawn particles periodically
-function scheduleParticles() {
-  if (nodes.length < 2 || edgeLines.length === 0) return;
-  const edge = edgeLines[Math.floor(Math.random() * edgeLines.length)];
-  if (edge && edge.userData.from && edge.userData.to) {
-    spawnParticle(edge.userData.from, edge.userData.to);
-  }
-}
-
-// ===================================================
-// ANIMATION LOOP
-// ===================================================
-let clock = new THREE.Clock();
-let ringPhase = 0;
-
-function animate() {
-  animId = requestAnimationFrame(animate);
-  const delta = clock.getDelta();
-  ringPhase += delta;
-
-  // Camera orbit
-  sphericalRadius += (targetRadius - sphericalRadius) * 0.05;
-  camera.position.x = sphericalRadius * Math.sin(sphericalPhi) * Math.sin(sphericalTheta);
-  camera.position.y = sphericalRadius * Math.cos(sphericalPhi);
-  camera.position.z = sphericalRadius * Math.sin(sphericalPhi) * Math.cos(sphericalTheta);
-  camera.lookAt(0, 0, 0);
-
-  // Animate rings
-  scene.children.forEach(obj => {
-    if (obj.userData.isRing) {
-      const s = 1 + 0.15 * Math.sin(ringPhase * 2.5);
-      obj.scale.set(s, s, s);
-      obj.material.opacity = 0.5 + 0.3 * Math.sin(ringPhase * 2.5);
-      // Billboard ring toward camera
-      obj.lookAt(camera.position);
-    }
-  });
-
-  // Node hover highlight
-  raycaster.setFromCamera(mouse, camera);
-  const hits = raycaster.intersectObjects(nodeMeshes);
-  nodeMeshes.forEach(m => {
-    const node = m.userData.node;
-    if (!node) return;
-    const isHit = hits.length && hits[0].object === m;
-    m.material.emissiveIntensity = isHit ? 0.6 : (node.isOurs ? 0.3 : 0.15);
-  });
-
-  updateParticles();
-  renderer.render(scene, camera);
-}
-
-// ===================================================
-// WEBSOCKET — Live Base chain payments
-// ===================================================
-let wsRetries = 0;
-function connectWebSocket() {
-  // Public Base WebSocket RPC
-  const WS_URL = 'wss://mainnet.base.org';
-  const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
-  // TransferWithAuthorization topic (keccak256)
-  const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
-
-  try {
-    const ws = new WebSocket(WS_URL);
-    ws.onopen = () => {
-      wsRetries = 0;
-      // Subscribe to USDC Transfer events
-      ws.send(JSON.stringify({
-        jsonrpc: '2.0',
-        id: 1,
-        method: 'eth_subscribe',
-        params: ['logs', {
-          address: USDC,
-          topics: [TRANSFER_TOPIC]
-        }]
-      }));
-    };
-
-    ws.onmessage = e => {
-      try {
-        const msg = JSON.parse(e.data);
-        if (msg.params && msg.params.result) {
-          handleTransferEvent(msg.params.result);
-        }
-      } catch(err) {}
-    };
-
-    ws.onclose = () => {
-      wsRetries++;
-      setTimeout(connectWebSocket, Math.min(3000 * wsRetries, 30000));
-    };
-    ws.onerror = () => ws.close();
-  } catch(e) {
-    setTimeout(connectWebSocket, 3000);
-  }
-}
-
-function handleTransferEvent(log) {
-  // from → to are topics[1] and topics[2]
-  if (!log.topics || log.topics.length < 3) return;
-  const fromAddr = '0x' + log.topics[1].slice(26).toLowerCase();
-  const toAddr = '0x' + log.topics[2].slice(26).toLowerCase();
-
-  // Try to match to known nodes (unlikely in demo, but animate anyway)
-  if (nodes.length >= 2) {
-    const fromIdx = Math.floor(Math.random() * nodes.length);
-    let toIdx = Math.floor(Math.random() * nodes.length);
-    if (toIdx === fromIdx) toIdx = (fromIdx + 1) % nodes.length;
-    spawnParticle(nodes[fromIdx], nodes[toIdx]);
-
-    // Update activity feed
-    const activity = document.getElementById('activity-list');
-    const first = activity.firstElementChild;
-    const item = document.createElement('div');
-    item.className = 'activity-item';
-    item.innerHTML = `
-      <div class="activity-time">just now</div>
-      <div class="activity-text">Transfer: ${fromAddr.slice(0,6)}…→${toAddr.slice(0,6)}… (Base)</div>
-    `;
-    if (first) activity.insertBefore(item, first);
-    // Keep only 5
-    while (activity.children.length > 5) activity.removeChild(activity.lastChild);
-  }
-}
-
-// ===================================================
-// PERIODIC UPDATES
-// ===================================================
-async function periodicUpdate() {
-  try {
-    const raw = await fetchWithCache('https://8004scan.io/api/v1/public/feedbacks', 30000);
-    const { arr } = unpack8004scan(raw);
-    if (arr && arr.length) {
-      const items = arr.slice(0, 5).map(f => ({
-        time: timeAgo(f.submitted_at || f.created_at),
-        text: (f.agent?.name || f.agent_id?.slice(0,8) || '?') +
-              ' · score ' + (f.score || '—')
-      }));
-      updateActivity(items);
-    }
-  } catch(e) {}
-}
-
-function timeAgo(ts) {
-  if (!ts) return 'recently';
-  const diff = (Date.now() - new Date(ts).getTime()) / 1000;
-  if (diff < 60) return Math.floor(diff) + 's ago';
-  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
-  return Math.floor(diff / 3600) + 'h ago';
-}
-
-// ===================================================
-// MAIN
-// ===================================================
+// ── MAIN ─────────────────────────────────────────
 async function main() {
-  initThree();
+  // 1. Load feed immediately
+  await refreshFeed();
+  startCountdown();
 
-  const { nodes: loadedNodes, edges: loadedEdges } = await loadData();
+  // 2. Load xgate agents (4 pages × 50, ~200 total)
+  document.getElementById('agent-list-wrap').innerHTML =
+    '<div style="padding:16px;text-align:center;color:var(--muted);font-size:11px;font-family:monospace;">Fetching agents…</div>';
 
-  setLoadingStatus('Starting simulation...', 95);
-  buildGraph();
+  const fetched = await loadXgateAgents();
+  // prepend our agents
+  xgateAgents = [
+    ...OUR_AGENTS.map(a => ({...a, isOurs:true})),
+    ...fetched
+  ];
+  fetched.forEach(a => { agentById[a.id] = a; });
+  OUR_AGENTS.forEach(a => { agentById[a.id] = a; });
 
-  // Hide loading
-  setTimeout(() => {
-    document.getElementById('loading').style.display = 'none';
-  }, 400);
+  filteredList = xgateAgents;
+  document.getElementById('agent-count').textContent = `(${xgateAgents.length})`;
+  renderAgentList(filteredList);
 
-  animate();
+  // 3. Stats
+  const stats = await loadStats();
+  document.getElementById('st-agents').textContent = xgateAgents.length.toLocaleString();
+  document.getElementById('st-txns').textContent   =
+    stats.feedbackTotal ? stats.feedbackTotal.toLocaleString() : '—';
 
-  // Particle spawner
-  setInterval(scheduleParticles, 1200);
-
-  // Live chain
-  connectWebSocket();
-
-  // Periodic data refresh
-  setInterval(periodicUpdate, 30000);
-
-  setLoadingStatus('Ready', 100);
+  // 4. Reload agents every 2 min
+  setInterval(async () => {
+    const fresh = await loadXgateAgents();
+    fresh.forEach(a => { agentById[a.id] = a; });
+    xgateAgents = [
+      ...OUR_AGENTS.map(a => ({...a, isOurs:true})),
+      ...fresh
+    ];
+    filteredList = xgateAgents;
+    document.getElementById('agent-count').textContent = `(${xgateAgents.length})`;
+    renderAgentList(filteredList);
+    document.getElementById('st-agents').textContent = xgateAgents.length.toLocaleString();
+  }, 120000);
 }
 
 main();
