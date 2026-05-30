@@ -677,13 +677,13 @@ function buildAgentNodes(rawAgents) {
   const nodeList = OUR_AGENTS.map(a => ({
     ...a,
     isOurs: true,
-    size: 2.2,
-    color: 0x2980d9,
+    size: 3.0,
+    color: 0x111111,
   }));
 
   // Add fetched or mock agents
   const others = rawAgents || MOCK_AGENTS;
-  others.slice(0, 20).forEach((a, i) => {
+  others.slice(0, 60).forEach((a, i) => {
     const rep = a.reputation || a.score || Math.floor(Math.random() * 40 + 50);
     nodeList.push({
       id: a.id || `agent-${i}`,
@@ -693,8 +693,8 @@ function buildAgentNodes(rawAgents) {
       price: a.price || '0.02 USDC',
       description: a.description || a.desc || 'AI agent service',
       isOurs: false,
-      size: 0.6 + (rep / 100) * 1.0,
-      color: 0x1a5fa8,
+      size: 0.8 + (rep / 100) * 1.2,
+      color: 0x111111,
       endpoints: a.endpoints || []
     });
   });
@@ -722,52 +722,76 @@ function buildEdges(nodeList) {
   return edgeList;
 }
 
+function extractAgentArray(data) {
+  if (!data) return null;
+  if (Array.isArray(data)) return data.length ? data : null;
+  // try common wrapper keys
+  for (const key of ['agents','services','data','results','items','list']) {
+    if (Array.isArray(data[key]) && data[key].length) return data[key];
+  }
+  return null;
+}
+
 async function loadData() {
   setLoadingStatus('Fetching agent services...', 10);
 
-  // Step 1: Try xgate services
+  // Step 1: xgate — try both /agents and /services
   let xgateAgents = null;
-  try {
-    const xg = await fetchWithCache('https://api.xgate.run/services');
-    if (xg && Array.isArray(xg)) xgateAgents = xg;
-    else if (xg && xg.services) xgateAgents = xg.services;
-  } catch(e) {}
+  let xgateTotalCount = 0;
+  for (const ep of ['https://api.xgate.run/agents', 'https://api.xgate.run/services']) {
+    const xg = await fetchWithCache(ep);
+    const arr = extractAgentArray(xg);
+    if (arr) {
+      xgateAgents = arr;
+      // grab total count from wrapper if present
+      xgateTotalCount = (xg && (xg.total || xg.count || xg.totalCount)) || arr.length;
+      console.log('[xgate]', ep, '→', arr.length, 'agents, total:', xgateTotalCount);
+      break;
+    }
+  }
 
   setLoadingStatus('Fetching network stats...', 30);
 
-  // Step 2: Try 8004scan stats
+  // Step 2: 8004scan stats
   let stats = null;
-  try {
-    const s = await fetchWithCache('https://8004scan.io/api/v1/public/stats');
-    if (s) stats = s;
-  } catch(e) {}
+  const s = await fetchWithCache('https://8004scan.io/api/v1/public/stats');
+  if (s && typeof s === 'object') stats = s;
 
   setLoadingStatus('Loading agent profiles...', 50);
 
-  // Step 3: Try 8004scan agents
+  // Step 3: 8004scan agents (supplement if xgate gave few results)
   let scanAgents = null;
-  try {
+  if (!xgateAgents || xgateAgents.length < 5) {
     const a = await fetchWithCache('https://8004scan.io/api/v1/public/agents');
-    if (a && Array.isArray(a)) scanAgents = a;
-    else if (a && a.agents) scanAgents = a.agents;
-  } catch(e) {}
+    scanAgents = extractAgentArray(a);
+    if (scanAgents) console.log('[8004scan] agents →', scanAgents.length);
+  }
 
   setLoadingStatus('Building network graph...', 70);
 
-  // Merge agents
-  const rawAgents = xgateAgents || scanAgents || MOCK_AGENTS;
+  // Pick best source — merge xgate + scan if both available
+  let rawAgents = MOCK_AGENTS;
+  if (xgateAgents && xgateAgents.length >= 3) {
+    rawAgents = scanAgents
+      ? [...xgateAgents, ...scanAgents.filter(sa => !xgateAgents.find(xa => xa.id === sa.id))]
+      : xgateAgents;
+  } else if (scanAgents && scanAgents.length >= 3) {
+    rawAgents = scanAgents;
+  }
+
   nodes = buildAgentNodes(rawAgents);
   edges = buildEdges(nodes);
-
-  // Build agent map
   nodes.forEach(n => { agentMap[n.id] = n; });
 
-  // Update stats
-  if (stats) {
-    updateStats(stats);
-  } else {
-    updateStats(MOCK_STATS);
-  }
+  // Stats: prefer live data, fall back to node count
+  const liveTotal = xgateTotalCount || (stats && (stats.totalAgents || stats.total_agents || stats.total)) || nodes.length;
+  const liveActive = (stats && (stats.activeNow || stats.active_now || stats.active)) || Math.round(liveTotal * 0.38);
+  updateStats({
+    totalAgents: liveTotal,
+    activeNow: liveActive,
+    volume: (stats && (stats.volume || stats.totalVolume)) || MOCK_STATS.volume,
+    transactions: (stats && (stats.transactions || stats.totalTransactions)) || MOCK_STATS.transactions
+  });
 
   setLoadingStatus('Rendering 3D graph...', 85);
   updateTopAgents();
@@ -891,16 +915,16 @@ let particles = [];
 let raycaster, mouse;
 let isDragging = false, prevMouse = { x: 0, y: 0 };
 let sphericalTheta = 0, sphericalPhi = Math.PI / 3;
-let sphericalRadius = 70;
-let targetRadius = 70;
+let sphericalRadius = 160;
+let targetRadius = 160;
 
 function initThree() {
   const container = document.getElementById('canvas-container');
   const W = container.offsetWidth, H = container.offsetHeight;
 
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(55, W / H, 0.1, 1000);
-  camera.position.set(0, 20, 70);
+  camera = new THREE.PerspectiveCamera(60, W / H, 0.1, 2000);
+  camera.position.set(0, 40, 160);
 
   renderer = new THREE.WebGLRenderer({
     canvas: document.getElementById('three-canvas'),
@@ -942,13 +966,13 @@ function setupInteraction(container) {
 
   container.addEventListener('wheel', e => {
     e.preventDefault();
-    targetRadius = Math.max(15, Math.min(200, targetRadius + e.deltaY * 0.12));
+    targetRadius = Math.max(30, Math.min(400, targetRadius + e.deltaY * 0.25));
   }, { passive: false });
 
   container.addEventListener('click', onCanvasClick);
 
-  document.getElementById('zoom-in').onclick = () => targetRadius = Math.max(15, targetRadius - 10);
-  document.getElementById('zoom-out').onclick = () => targetRadius = Math.min(200, targetRadius + 10);
+  document.getElementById('zoom-in').onclick = () => targetRadius = Math.max(30, targetRadius - 20);
+  document.getElementById('zoom-out').onclick = () => targetRadius = Math.min(400, targetRadius + 20);
 }
 
 function onDrag(e) {
@@ -1014,9 +1038,9 @@ function forceLayout(nodes, iterations = 150) {
   nodes.forEach((node, i) => {
     if (!node.px) {
       const angle = (i / n) * Math.PI * 2;
-      const radius = 18 + Math.random() * 16;
+      const radius = 40 + Math.random() * 30;
       node.px = Math.cos(angle) * radius;
-      node.py = (Math.random() - 0.5) * 20;
+      node.py = (Math.random() - 0.5) * 40;
       node.pz = Math.sin(angle) * radius;
       node.vx = node.vy = node.vz = 0;
     }
@@ -1034,7 +1058,7 @@ function forceLayout(nodes, iterations = 150) {
         const dy = nodes[i].py - nodes[j].py;
         const dz = nodes[i].pz - nodes[j].pz;
         const dist2 = dx*dx + dy*dy + dz*dz + 0.01;
-        const force = 400 / dist2;
+        const force = 1200 / dist2;
         nodes[i].vx += dx * force; nodes[j].vx -= dx * force;
         nodes[i].vy += dy * force; nodes[j].vy -= dy * force;
         nodes[i].vz += dz * force; nodes[j].vz -= dz * force;
@@ -1080,7 +1104,7 @@ function buildGraph() {
     const geo   = new THREE.TubeGeometry(curve, 1, tubeR, 5, false);
     const opacity = 0.55 + edge.weight * 0.35;
     const mat   = new THREE.MeshBasicMaterial({
-      color: 0x90bce8,
+      color: 0x1e3a6e,
       transparent: true,
       opacity
     });
@@ -1095,9 +1119,9 @@ function buildGraph() {
     const geo = new THREE.SphereGeometry(node.size * 0.5, 20, 20);
     const mat = new THREE.MeshPhongMaterial({
       color: node.color,
-      shininess: 60,
-      emissive: node.isOurs ? 0x1a4070 : 0x0d2040,
-      emissiveIntensity: 0.3
+      shininess: 80,
+      emissive: node.isOurs ? 0x222222 : 0x111111,
+      emissiveIntensity: node.isOurs ? 0.5 : 0.2
     });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(node.px, node.py, node.pz);
@@ -1117,9 +1141,9 @@ function buildGraph() {
     if (node.isOurs) {
       const ringGeo = new THREE.RingGeometry(node.size * 0.55, node.size * 0.65, 32);
       const ringMat = new THREE.MeshBasicMaterial({
-        color: 0x2980d9,
+        color: 0x1e3a6e,
         transparent: true,
-        opacity: 0.5,
+        opacity: 0.6,
         side: THREE.DoubleSide
       });
       const ring = new THREE.Mesh(ringGeo, ringMat);
