@@ -328,7 +328,7 @@ GET._c = {};
 async function GET(url, ttl) {
   if (ttl > 0 && GET._c[url] && Date.now() - GET._c[url].t < ttl) return GET._c[url].d;
   try {
-    var r = await fetch(url, {signal: AbortSignal.timeout(10000)});
+    var r = await fetch(url, {signal: AbortSignal.timeout(10000), cache: 'no-store'});
     if (!r.ok) throw new Error(r.status);
     var d = await r.json();
     if (ttl > 0) GET._c[url] = {d: d, t: Date.now()};
@@ -605,7 +605,7 @@ function cp(btn, url) {
 
 // ── POLL (8004scan, every 15s) ────────────────────────
 async function poll() {
-  var raw = await GET('https://8004scan.io/api/v1/public/feedbacks?limit=100&is_testnet=false', 0);
+  var raw = await GET('https://8004scan.io/api/v1/public/feedbacks?limit=100', 0);
   if (!raw || !raw.data) return;
   var fbs = raw.data;
   var total = raw.meta && raw.meta.pagination && raw.meta.pagination.total;
@@ -642,7 +642,7 @@ async function main() {
   buildXgateList(xgateData);
 
   // 2. Load feed — 3 pages in parallel for initial breadth
-  var BASE = 'https://8004scan.io/api/v1/public/feedbacks?limit=100&is_testnet=false';
+  var BASE = 'https://8004scan.io/api/v1/public/feedbacks?limit=100';
   var results = await Promise.all([
     GET(BASE + '&page=1', 0),
     GET(BASE + '&page=2', 0),
