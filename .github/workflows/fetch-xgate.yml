@@ -21,14 +21,17 @@ jobs:
       - name: Fetch xgate agents
         run: node scripts/fetch-xgate.js
 
+      - name: Check service health
+        run: node scripts/check-health.js
+
       - name: Commit if changed
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add public/data/xgate.json
+          git add public/data/xgate.json public/data/health.json
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "chore: update xgate data"
+            git commit -m "chore: update xgate data and health status"
             git push
           fi
