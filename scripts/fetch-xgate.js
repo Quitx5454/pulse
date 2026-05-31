@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Fetches xgate.run agent + service data server-side (no CORS).
+// Fetches xgate.run leaderboard + service data server-side (no CORS).
 // Writes public/data/xgate.json as compact JSON array.
 // Row format: [id, chainId, name, desc, reputationScore, rankScore]
 
@@ -12,7 +12,7 @@ const OUT = join(__dirname, '..', 'public', 'data', 'xgate.json');
 
 const LIMIT     = 50;   // API max is 50
 const TIMEOUT   = 20000;
-const MAX_PAGES = 20;   // safety cap: 20 × 50 = 1000 max rows per source
+const MAX_PAGES = 20;   // 20 × 50 = 1000 max rows per source
 
 async function get(url) {
   const res = await fetch(url, {
@@ -21,13 +21,6 @@ async function get(url) {
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
-}
-
-function decodeTokenUri(uri) {
-  const prefix = 'data:application/json;base64,';
-  if (!uri?.startsWith(prefix)) return {};
-  try { return JSON.parse(Buffer.from(uri.slice(prefix.length), 'base64').toString('utf8')); }
-  catch { return {}; }
 }
 
 function chainIdFromNetworks(networks) {
@@ -39,15 +32,14 @@ function chainIdFromNetworks(networks) {
   return 0;
 }
 
-// Normalise an /agents result row
-function agentRow(a) {
-  const meta = decodeTokenUri(a.tokenUri);
-  const id   = String(a.agentId ?? a.id ?? '');
+// Normalise a /leaderboard result row
+function leaderboardRow(a) {
+  const id = String(a.agentId ?? a.id ?? '');
   return [
     id,
-    Number(a.chainId ?? 100),
-    String(meta.name ?? a.name ?? `Agent #${id}`),
-    String((meta.description ?? a.description ?? '').trim()),
+    Number(a.chainId ?? 0),
+    String(a.name ?? `Agent #${id}`),
+    String((a.description ?? '').trim()),
     Number(a.reputationScore ?? 0),
     Number(a.rankScore ?? 0),
   ];
@@ -95,8 +87,8 @@ async function main() {
   const seen = new Map();
 
   const sources = [
-    ['agents',   'https://api.xgate.run/agents',   agentRow],
-    ['services', 'https://api.xgate.run/services', serviceRow],
+    ['leaderboard', 'https://api.xgate.run/leaderboard', leaderboardRow],
+    ['services',    'https://api.xgate.run/services',    serviceRow],
   ];
 
   for (const [label, url, toRow] of sources) {
