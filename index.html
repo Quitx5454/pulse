@@ -292,6 +292,7 @@ let countdown    = 15;
 let selectedId   = null;
 let activeChain  = null; // null = All
 let healthData   = {};   // url -> "online"|"offline"|"unknown"
+let healthLoaded = false;
 let searchTimer  = null;
 let semanticIds  = new Set(); // IDs of agents surfaced by semantic search
 
@@ -373,8 +374,10 @@ function renderList(list) {
     var col = color(a.name);
     var sel = selectedId === a.id ? ' sel' : '';
     var chain = a.chain || chainName(a.chainId);
-    var hs = healthData[a.id];
-    var dot = hs ? '<span class="upd ' + (hs==='online'?'upd-online':hs==='offline'?'upd-offline':'upd-unknown') + '" title="' + hs + '"></span>' : '';
+    // healthLoaded: once health.json is fetched, all agents get a dot
+    // (unknown/gray for numeric agents without a health URL)
+    var hs = healthData[a.id] || (healthLoaded ? 'unknown' : null);
+    var dot = hs ? '<span class="upd upd-' + (hs==='online'?'online':hs==='offline'?'offline':'unknown') + '" title="' + hs + '"></span>' : '';
     html += '<div class="ali' + sel + '" onclick="openDetail(\'' + esc(a.id) + '\')">' +
       '<div class="av" style="background:' + col + '">' + ini(a.name) + '</div>' +
       '<div style="flex:1;min-width:0">' +
@@ -637,7 +640,7 @@ async function main() {
     ]);
     if (xr.ok) xgateData = await xr.json();
     else console.warn('xgate.json not found (' + xr.status + '), using fallback');
-    if (hr.ok) healthData = await hr.json();
+    if (hr.ok) { healthData = await hr.json(); healthLoaded = true; }
   } catch(e) { console.warn('Failed to load data:', e.message); }
   buildXgateList(xgateData);
 

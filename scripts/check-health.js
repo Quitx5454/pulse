@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // Checks health of service URLs in xgate.json.
-// Writes public/data/health.json: { "<url>": "online"|"offline"|"unknown" }
+// Checks the ORIGIN of each URL (not the deep API path) to avoid
+// false-offline from endpoints that reject HEAD with 405.
+// Writes public/data/health.json: { "<full-url>": "online"|"offline"|"unknown" }
 
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
@@ -13,17 +15,44 @@ const OUT   = join(__dirname, '..', 'public', 'data', 'health.json');
 const TIMEOUT     = 8000;
 const CONCURRENCY = 10;
 
-async function checkUrl(url) {
+async function headRequest(url) {
+  const ctrl  = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), TIMEOUT);
   try {
-    const ctrl  = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), TIMEOUT);
-    const res   = await fetch(url, { method: 'HEAD', signal: ctrl.signal, redirect: 'follow' });
+    const res = await fetch(url, { method: 'HEAD', signal: ctrl.signal, redirect: 'follow' });
     clearTimeout(timer);
-    if (res.status >= 200 && res.status < 400) return 'online';
-    return 'offline';
+    return res.status;
   } catch {
-    return 'unknown';
+    clearTimeout(timer);
+    return null; // network error or timeout
   }
+}
+
+async function checkUrl(serviceUrl) {
+  let origin;
+  try { origin = new URL(serviceUrl).origin; } catch { return 'unknown'; }
+
+  // Check origin with HEAD first (lightweight)
+  const status = await headRequest(origin);
+
+  if (status === null) return 'unknown';             // timeout / unreachable
+  if (status >= 200 && status < 400) return 'online'; // 2xx / 3xx
+  if (status === 405) {
+    // HEAD not supported — fall back to GET on origin
+    try {
+      const res = await fetch(origin, {
+        signal: AbortSignal.timeout(TIMEOUT),
+        redirect: 'follow',
+      });
+      if (res.status >= 200 && res.status < 400) return 'online';
+      return res.status >= 500 ? 'offline' : 'online'; // 4xx from GET = server up
+    } catch {
+      return 'unknown';
+    }
+  }
+  if (status >= 500) return 'offline';
+  // 4xx (401, 403, 404 …) from HEAD on origin — server is reachable
+  return 'online';
 }
 
 async function main() {
@@ -32,7 +61,7 @@ async function main() {
     data.map(row => row[0]).filter(id => typeof id === 'string' && id.startsWith('http'))
   )];
 
-  console.log(`Checking ${urls.length} service URLs…`);
+  console.log(`Checking ${urls.length} service origins…`);
   const health = {};
 
   for (let i = 0; i < urls.length; i += CONCURRENCY) {
