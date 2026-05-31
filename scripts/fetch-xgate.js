@@ -10,8 +10,9 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT = join(__dirname, '..', 'public', 'data', 'xgate.json');
 
-const LIMIT   = 50;
-const TIMEOUT = 20000;
+const LIMIT     = 50;   // API max is 50
+const TIMEOUT   = 20000;
+const MAX_PAGES = 20;   // safety cap: 20 × 50 = 1000 max rows per source
 
 async function get(url) {
   const res = await fetch(url, {
@@ -72,7 +73,7 @@ async function fetchAll(baseUrl, toRow) {
   const rows = [];
   let offset = 0;
 
-  while (true) {
+  for (let page = 0; page < MAX_PAGES; page++) {
     const url = `${baseUrl}?limit=${LIMIT}&offset=${offset}`;
     let data;
     try { data = await get(url); } catch (e) { console.warn(`  offset=${offset}: ${e.message}`); break; }
@@ -83,7 +84,7 @@ async function fetchAll(baseUrl, toRow) {
     rows.push(...items.map(toRow));
     process.stdout.write(`\r  ${rows.length} rows…`);
 
-    if (items.length < LIMIT) break;   // last page
+    if (items.length < LIMIT) break;   // last partial page → done
     offset += LIMIT;
   }
   console.log('');
