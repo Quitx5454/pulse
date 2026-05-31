@@ -224,6 +224,10 @@ body::before{
       <div class="rf"><span class="rl">Feedbacks seen</span><span class="rv" id="rp-fbc">—</span></div>
       <div class="rf"><span class="rl">Last activity</span><span class="rv" id="rp-last">—</span></div>
     </div>
+    <div class="rx" id="rp-about-wrap">
+      <div class="sec-title" style="margin-bottom:4px;">About</div>
+      <div id="rp-about" style="font-size:11px;color:var(--text);line-height:1.5;"></div>
+    </div>
     <a class="inv" id="rp-inv" href="#" target="_blank" style="display:none">Invoke →</a>
     <div class="rx">
       <div class="sec-title" style="margin-bottom:6px;">Recent Feedbacks</div>
@@ -426,7 +430,15 @@ function showDetailPanel(a, fbs) {
   document.getElementById('rp-av').textContent = ini(a.name);
   document.getElementById('rp-av').style.background = col;
   document.getElementById('rp-name').textContent = a.name;
-  document.getElementById('rp-desc').textContent = a.desc || '—';
+  document.getElementById('rp-desc').textContent = '';
+  var aboutEl = document.getElementById('rp-about');
+  var aboutWrap = document.getElementById('rp-about-wrap');
+  if (a.desc && a.desc.trim()) {
+    aboutEl.textContent = a.desc.trim();
+    aboutWrap.style.display = '';
+  } else {
+    aboutWrap.style.display = 'none';
+  }
   document.getElementById('rp-chain').textContent = (a.chain || chainName(a.chainId)) + (a.chainId ? ' (' + a.chainId + ')' : '');
   document.getElementById('rp-score').textContent = a.rep ? (a.rep + '/100') : '—';
   document.getElementById('rp-fbc').textContent   = a.rank || '—';
