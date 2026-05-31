@@ -293,6 +293,7 @@ let selectedId   = null;
 let activeChain  = null; // null = All
 let healthData   = {};   // url -> "online"|"offline"|"unknown"
 let searchTimer  = null;
+let semanticIds  = new Set(); // IDs of agents surfaced by semantic search
 
 // ── UTILS ────────────────────────────────────────────
 const PAL = ['#1a5fa8','#2980d9','#1e3a6e','#27ae60','#8e44ad','#16a085','#c0392b','#d35400','#2c3e50','#7f8c8d'];
@@ -399,15 +400,19 @@ function applyFilters(q) {
   var base = activeChain === null ? xgateList : xgateList.filter(function(a) {
     return a.chainId === activeChain;
   });
-  q = (q||'').toLowerCase().trim();
-  filteredList = q ? base.filter(function(a) {
-    return a.name.toLowerCase().indexOf(q) !== -1 || String(a.id).indexOf(q) !== -1;
+  var qNorm = (q||'').toLowerCase().trim();
+  // semantic results bypass the name filter so they always show when query is active
+  filteredList = qNorm ? base.filter(function(a) {
+    return semanticIds.has(a.id) ||
+           a.name.toLowerCase().indexOf(qNorm) !== -1 ||
+           String(a.id).indexOf(qNorm) !== -1;
   }) : base;
   renderList(filteredList);
 }
 
 function filterList(q) {
   clearTimeout(searchTimer);
+  if (!q.trim()) semanticIds.clear();
   applyFilters(q);
   if (!q.trim()) return;
   searchTimer = setTimeout(function() { doSemanticSearch(q.trim()); }, 500);
@@ -421,20 +426,34 @@ async function doSemanticSearch(q) {
   inp.placeholder = 'search…';
   if (!raw) return;
   var results = raw.data || raw.results || raw.agents || [];
-  var seenLocal = {}; xgateList.forEach(function(a) { seenLocal[a.id] = true; });
-  var added = false;
+
+  // build name→id map for dedup across different ID schemes (xgate vs 8004scan)
+  var nameMap = {};
+  xgateList.forEach(function(a) { nameMap[a.name.toLowerCase()] = a.id; });
+
   results.forEach(function(r) {
-    var id = String(r.id||r.agentId||r.agent_id||'');
-    if (!id || seenLocal[id]) return;
-    var agent = {id:id, chainId:r.chainId||r.chain_id||0,
-                 chain:chainName(r.chainId||r.chain_id||0),
-                 name:r.name||('Agent '+id.slice(0,8)),
-                 desc:r.description||r.desc||'',
-                 rep:r.reputationScore||r.score||0,
-                 rank:r.rankScore||0, endpoints:[]};
-    xgateList.push(agent); xgateById[id] = agent; added = true;
+    var id   = String(r.id || r.agentId || r.agent_id || '');
+    var name = String(r.name || '');
+    if (!id) return;
+
+    // if same agent already in list (by name), just tag it as semantic
+    var existingId = nameMap[name.toLowerCase()];
+    if (existingId) { semanticIds.add(existingId); return; }
+
+    // new agent from 8004scan — add it
+    semanticIds.add(id);
+    if (xgateById[id]) return;
+    var cid = r.chain_id || r.chainId || 0;
+    var agent = {id:id, chainId:cid, chain:chainName(cid),
+                 name:name || ('Agent ' + id.slice(0,8)),
+                 desc:r.description || r.desc || '',
+                 rep:r.average_score || r.reputationScore || r.score || 0,
+                 rank:r.rank || r.rankScore || 0, endpoints:[]};
+    xgateList.push(agent); xgateById[id] = agent;
+    nameMap[name.toLowerCase()] = id;
   });
-  if (added) applyFilters(inp.value);
+
+  applyFilters(inp.value); // always re-render; semanticIds updated above
 }
 
 // ── RENDER FEED CARD ─────────────────────────────────
