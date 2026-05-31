@@ -314,15 +314,14 @@ async function GET(url, ttl) {
 // ── BUILD XGATE AGENT LIST ───────────────────────────
 function buildXgateList(data) {
   var list = OUR.map(function(a) { return Object.assign({}, a); });
-  var seenNames = {};
-  OUR.forEach(function(a) { seenNames[a.name.toLowerCase()] = true; xgateById[a.id] = a; });
+  var seenIds = {};
+  OUR.forEach(function(a) { seenIds[a.id] = true; xgateById[a.id] = a; });
 
   for (var i = 0; i < data.length; i++) {
     var row = data[i];
     var id = String(row[0]), chainId = row[1], name = row[2], desc = row[3], rep = row[4], rank = row[5];
-    var nameKey = name.toLowerCase();
-    if (seenNames[nameKey]) continue;
-    seenNames[nameKey] = true;
+    if (seenIds[id]) continue;
+    seenIds[id] = true;
     var agent = {id: id, chainId: chainId, chain: chainName(chainId),
                  name: name, desc: desc, rep: rep, rank: rank,
                  endpoints: [], isOurs: false};
@@ -536,9 +535,9 @@ async function main() {
   document.getElementById('agent-list').innerHTML = '<div class="empty" style="padding:20px;">Loading xgate data…</div>';
   var xgateData = XGATE_DATA_FALLBACK;
   try {
-    var xr = await fetch('/data/xgate.json');
+    var xr = await fetch('public/data/xgate.json');
     if (xr.ok) xgateData = await xr.json();
-    else console.warn('xgate.json not found, using fallback');
+    else console.warn('xgate.json not found (' + xr.status + '), using fallback');
   } catch(e) { console.warn('Failed to load xgate.json:', e.message); }
   buildXgateList(xgateData);
 
