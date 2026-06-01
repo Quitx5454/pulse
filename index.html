@@ -372,6 +372,10 @@ textarea.tm-in{resize:vertical;min-height:46px;}
       <div class="sec-title" style="margin-bottom:4px;">About</div>
       <div id="rp-about" style="font-size:11px;color:var(--text);line-height:1.5;"></div>
     </div>
+    <div class="rx" id="rp-eps-wrap" style="display:none;">
+      <div class="sec-title" style="margin-bottom:6px;">Endpoints <span id="rp-eps-note" style="font-weight:400;color:var(--muted);"></span></div>
+      <div id="rp-eps"></div>
+    </div>
     <a class="inv" id="rp-inv" href="#" target="_blank" style="display:none">Invoke →</a>
     <button class="test-btn" id="rp-test" onclick="openTestModal()">⚡ Test Agent (x402 pay)</button>
     <div class="rx">
@@ -414,6 +418,13 @@ textarea.tm-in{resize:vertical;min-height:46px;}
 // XGATE_DATA loaded at runtime from /data/xgate.json (fetched by GitHub Actions every 6h)
 // Format per row: [agentId, chainId, name, desc, reputationScore, rankScore]
 var XGATE_DATA_FALLBACK = [];
+
+// Cloudflare Worker CORS proxy (see workers/x402-proxy/). Global so both this
+// classic script and the x402 payment module below share one config.
+// Empty → direct requests (works for our own CORS-enabled agents).
+// Set    → route through the proxy so ANY x402 endpoint is testable from the
+//          browser, even ones without CORS headers.
+var PROXY_URL = 'https://x402-proxy.pulse-x402.workers.dev';
 
 // ── OUR AGENTS (always pinned at top) ────────────────
 const OUR = [
@@ -488,6 +499,17 @@ async function GET(url, ttl) {
   } catch(e) { console.warn('GET failed:', url, e.message); return null; }
 }
 
+// Build an endpoint object from a full URL (xgate service rows store the
+// x402 resource URL as the agent id). Returns null for non-URLs.
+function endpointFromUrl(url, desc) {
+  try {
+    var u = new URL(url);
+    return { url: url, host: u.host, p: (u.pathname || '/') + (u.search || ''), pr: '', d: (desc || '').trim() };
+  } catch (e) { return null; }
+}
+// Full URL for an endpoint object (prefers stored url, falls back to host+path).
+function epUrl(e) { return e.url || ('https://' + e.host + (e.p || '')); }
+
 // ── BUILD XGATE AGENT LIST ───────────────────────────
 function buildXgateList(data) {
   var list = OUR.map(function(a) { return Object.assign({}, a); });
@@ -502,6 +524,11 @@ function buildXgateList(data) {
     var agent = {id: id, chainId: chainId, chain: chainName(chainId),
                  name: name, desc: desc, rep: rep, rank: rank,
                  endpoints: [], isOurs: false};
+    // xgate service rows use the x402 resource URL as their id → derive endpoint
+    if (id.indexOf('http') === 0) {
+      var ep = endpointFromUrl(id, desc);
+      if (ep) agent.endpoints = [ep];
+    }
     list.push(agent);
     xgateById[id] = agent;
   }
@@ -662,6 +689,54 @@ function prependCards(fbs) {
   while (feed.children.length > 100) feed.removeChild(feed.lastChild);
 }
 
+// ── ENDPOINTS (right panel) ──────────────────────────
+function renderEndpoints(a) {
+  var wrap = document.getElementById('rp-eps-wrap');
+  var box  = document.getElementById('rp-eps');
+  var note = document.getElementById('rp-eps-note');
+  var eps  = (a && a.endpoints) || [];
+  if (!eps.length) { wrap.style.display = 'none'; box.innerHTML = ''; note.textContent = ''; return; }
+  note.textContent = '(' + eps.length + ')';
+  var html = '';
+  for (var i = 0; i < eps.length; i++) {
+    var e = eps[i], url = epUrl(e);
+    html += '<div class="ep-row">' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div class="ep-path" title="' + esc(url) + '">' + esc(url) + '</div>' +
+        (e.d ? '<div style="font-size:8px;color:var(--muted);">' + esc(e.d) + '</div>' : '') +
+      '</div>' +
+      (e.pr ? '<span class="ep-price">' + esc(e.pr) + '</span>' : '') +
+      '<button class="cp" data-url="' + esc(url) + '" onclick="cp(this, this.dataset.url)">copy</button>' +
+    '</div>';
+  }
+  box.innerHTML = html;
+  wrap.style.display = '';
+}
+
+// Best-effort: enrich an agent's endpoint(s) with price/description from the
+// xgate service-detail API (GET /services/{id}). Needs the CORS proxy, so it
+// no-ops silently when PROXY_URL is unset or the request fails.
+async function enrichEndpoints(a) {
+  if (!a || a.isOurs || a._enriched) return;
+  if (!PROXY_URL) return;                                   // detail API has no CORS
+  if (String(a.id).indexOf('http') !== 0) return;           // only service (URL-id) rows
+  a._enriched = true;
+  try {
+    var detailUrl = 'https://api.xgate.run/services/' + encodeURIComponent(a.id);
+    var via = PROXY_URL.replace(/\/+$/, '') + '/?target=' + encodeURIComponent(detailUrl);
+    var r = await fetch(via, { signal: AbortSignal.timeout(10000) });
+    if (!r.ok) return;
+    var d = await r.json();
+    var acc = (d.accepts && d.accepts[0]) || {};
+    var amt = acc.maxAmountRequired || d.maxAmountRequired;
+    var pr  = amt ? (Number(amt) / 1e6) + ' USDC' : '';
+    var resource = d.resource || d.id || a.id;
+    var ep = endpointFromUrl(resource, acc.description || a.desc);
+    if (ep) { ep.pr = pr; a.endpoints = [ep]; }
+    if (selectedId === a.id) renderEndpoints(a);             // re-render if still open
+  } catch (e) { /* proxy down / not found — keep URL-derived endpoint */ }
+}
+
 // ── DETAIL PANEL ─────────────────────────────────────
 function showDetailPanel(a, fbs) {
   var col = color(a.name);
@@ -684,9 +759,12 @@ function showDetailPanel(a, fbs) {
 
   var inv = document.getElementById('rp-inv');
   if (a.endpoints && a.endpoints.length) {
-    inv.href = 'https://' + a.endpoints[0].host + a.endpoints[0].p;
+    inv.href = epUrl(a.endpoints[0]);
     inv.style.display = '';
   } else { inv.style.display = 'none'; }
+
+  // Endpoints section — list every endpoint with URL + copy button
+  renderEndpoints(a);
 
   // "Test Agent" (x402 pay) — shown for every agent. Requests route through the
   // CORS proxy (PROXY_URL), so any x402 endpoint is testable. Agents without a
@@ -732,6 +810,7 @@ function openDetail(agentId) {
     return ((fb.agent && fb.agent.name) || '').toLowerCase() === nameLower;
   });
   showDetailPanel(a, matching);
+  enrichEndpoints(a);   // best-effort price/desc from xgate detail API (via proxy)
 }
 
 function openDetailByFeedAgent(agentId, name, chainId) {
@@ -945,7 +1024,7 @@ function openTestModal() {
   var a = selectedId ? xgateById[selectedId] : null;
   var ep = '', amt = '';
   if (a && a.endpoints && a.endpoints.length) {
-    ep  = 'https://' + a.endpoints[0].host + a.endpoints[0].p;
+    ep  = epUrl(a.endpoints[0]);
     amt = (a.endpoints[0].pr || '').replace(/[^0-9.]/g, '');
   }
   document.getElementById('tm-endpoint').value = ep;
@@ -1046,14 +1125,8 @@ import { base } from 'https://esm.sh/viem@2.x/chains';
 
 const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'; // USDC on Base mainnet
 
-// Cloudflare Worker CORS proxy (see workers/x402-proxy/). Fill in after deploy:
-//   const PROXY_URL = 'https://x402-proxy.YOUR_SUBDOMAIN.workers.dev';
-// When empty, requests go direct (works for our own CORS-enabled agents).
-// When set, every request is routed through the proxy so ANY x402 endpoint
-// becomes testable from the browser, even ones without CORS headers.
-const PROXY_URL = 'https://x402-proxy.pulse-x402.workers.dev';
-
-// Wrap an endpoint URL through the proxy when PROXY_URL is configured.
+// PROXY_URL is a global declared in the classic <script> above (so both the
+// classic script and this module share one config). Wrap an endpoint through it.
 function proxied(endpoint) {
   if (!PROXY_URL) return endpoint;
   return PROXY_URL.replace(/\/+$/, '') + '/?target=' + encodeURIComponent(endpoint);
