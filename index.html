@@ -316,7 +316,6 @@ let healthLoaded    = false;
 let searchTimer     = null;
 let semanticIds     = new Set();
 let graphLoaded     = false;
-let sigmaRenderer   = null;
 
 // ── UTILS ────────────────────────────────────────────
 const PAL = ['#1a5fa8','#2980d9','#1e3a6e','#27ae60','#8e44ad','#16a085','#c0392b','#d35400','#2c3e50','#7f8c8d'];
@@ -673,15 +672,13 @@ async function toggleGraph() {
 
 async function initGraph() {
   var wrap = document.getElementById('sigma-wrap');
-  wrap.innerHTML = '<div class="empty">Loading libraries…</div>';
+  wrap.innerHTML = '<div class="empty">Loading D3…</div>';
   try {
-    await loadScript('https://cdn.jsdelivr.net/npm/graphology@0.25.4/dist/graphology.umd.min.js');
-    await loadScript('https://cdn.jsdelivr.net/npm/graphology-layout-forceatlas2@0.10.1/dist/graphology-layout-forceatlas2.min.js');
-    await loadScript('https://cdn.jsdelivr.net/npm/sigma@3.0.0/build/sigma.min.js');
+    await loadScript('https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js');
 
     wrap.innerHTML = '<div class="empty">Fetching graph data…</div>';
     var r = await fetch('public/data/graph.json', {cache: 'no-store'});
-    if (!r.ok) throw new Error('graph.json not found (run GitHub Actions first)');
+    if (!r.ok) throw new Error('graph.json not found');
     var gd = await r.json();
 
     if (!gd.nodes || !gd.nodes.length) {
@@ -689,79 +686,90 @@ async function initGraph() {
       return;
     }
 
-    renderSigmaGraph(gd);
+    renderD3Graph(gd);
     graphLoaded = true;
   } catch(e) {
     wrap.innerHTML = '<div class="empty">Graph error: ' + esc(e.message) + '</div>';
   }
 }
 
-function renderSigmaGraph(gd) {
+function renderD3Graph(gd) {
   var wrap = document.getElementById('sigma-wrap');
   wrap.innerHTML = '';
 
-  // Build graphology graph
-  var GraphClass = (window.graphology && window.graphology.Graph) || window.Graph;
-  var graph = new GraphClass({ multi: false, type: 'undirected' });
+  var W = wrap.clientWidth  || 800;
+  var H = wrap.clientHeight || 600;
 
-  var n = gd.nodes.length;
-  gd.nodes.forEach(function(node, i) {
-    var angle = (2 * Math.PI * i) / n;
-    var radius = 1 + (Math.random() - 0.5) * 0.4;
-    var baseColor = node.isOurs ? '#1a3a6e'
-      : node.chainId === 8453 ? '#2980d9'
-      : node.chainId === 100  ? '#8e44ad'
-      : '#16a085';
-    graph.addNode(node.id, {
-      x: radius * Math.cos(angle),
-      y: radius * Math.sin(angle),
-      size: node.size,
-      label: node.name,
-      color: baseColor,
+  var svg = d3.select(wrap).append('svg')
+    .attr('width','100%').attr('height','100%')
+    .style('background','var(--bg)');
+
+  var g = svg.append('g');
+  svg.call(d3.zoom().scaleExtent([0.2, 6]).on('zoom', function(e) { g.attr('transform', e.transform); }));
+
+  var nodeMap = {};
+  var nodes = gd.nodes.map(function(n) { var o = Object.assign({}, n); nodeMap[n.id] = o; return o; });
+  var links = gd.edges
+    .filter(function(e) { return nodeMap[e.from] && nodeMap[e.to]; })
+    .map(function(e) { return {source: e.from, target: e.to, weight: e.weight}; });
+
+  var sim = d3.forceSimulation(nodes)
+    .force('link',  d3.forceLink(links).id(function(d){return d.id;}).distance(70).strength(0.4))
+    .force('charge',d3.forceManyBody().strength(-150))
+    .force('center',d3.forceCenter(W/2, H/2))
+    .force('collide',d3.forceCollide().radius(function(d){return d.size+5;}));
+
+  var link = g.selectAll('line').data(links).enter().append('line')
+    .attr('stroke','#b8d4ef')
+    .attr('stroke-opacity',0.8)
+    .attr('stroke-width',function(d){return Math.max(1,Math.min(4,d.weight));});
+
+  var node = g.selectAll('g.gn').data(nodes).enter().append('g').attr('class','gn')
+    .style('cursor','pointer')
+    .call(d3.drag()
+      .on('start',function(e,d){if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
+      .on('drag', function(e,d){d.fx=e.x;d.fy=e.y;})
+      .on('end',  function(e,d){if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;}));
+
+  node.append('circle')
+    .attr('r',function(d){return d.size;})
+    .attr('fill',function(d){
+      return d.isOurs    ? '#1a3a6e'
+           : d.chainId===8453 ? '#2980d9'
+           : d.chainId===100  ? '#8e44ad'
+           : '#16a085';
+    })
+    .attr('stroke','#fff').attr('stroke-width',1.5)
+    .on('mouseover',function(e,d){
+      var el=document.getElementById('graph-info');
+      el.innerHTML='<b>'+esc(d.name)+'</b><br>'+chainName(d.chainId)+' · rep '+d.rep+(d.feedbacks?' · '+d.feedbacks+' feedbacks':'');
+      el.style.display='';
+    })
+    .on('mouseout',function(){document.getElementById('graph-info').style.display='none';})
+    .on('click',function(e,d){
+      var id=d.id;
+      if(xgateById[id]){selectedId=id;openDetail(id);return;}
+      selectedId=id;
+      showDetailPanel({id:id,name:d.name,chainId:d.chainId,chain:chainName(d.chainId),
+        desc:'',rep:d.rep,rank:0,endpoints:[]},
+        feedFbsAll.filter(function(fb){return fb.agent_id===id;}));
     });
+
+  node.filter(function(d){return d.size>=10;}).append('text')
+    .attr('text-anchor','middle').attr('dy',function(d){return d.size+11;})
+    .attr('fill','var(--text)').attr('font-size','9px')
+    .attr('font-family','-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif')
+    .attr('pointer-events','none')
+    .text(function(d){return d.name.length>15?d.name.slice(0,13)+'…':d.name;});
+
+  sim.on('tick',function(){
+    link.attr('x1',function(d){return d.source.x;}).attr('y1',function(d){return d.source.y;})
+        .attr('x2',function(d){return d.target.x;}).attr('y2',function(d){return d.target.y;});
+    node.attr('transform',function(d){return 'translate('+d.x+','+d.y+')';});
   });
 
-  gd.edges.forEach(function(e) {
-    try {
-      if (graph.hasNode(e.from) && graph.hasNode(e.to) && !graph.hasEdge(e.from, e.to))
-        graph.addEdge(e.from, e.to, {size: Math.max(1, Math.min(4, e.weight)), color: '#b8d4ef'});
-    } catch(_) {}
-  });
-
-  // Force-directed layout
-  if (window.graphologyLayoutForceAtlas2) {
-    window.graphologyLayoutForceAtlas2.assign(graph, {
-      iterations: 150,
-      settings: { gravity: 1, scalingRatio: 6, slowDown: 10, adjustSizes: true },
-    });
-  }
-
-  var SigmaClass = window.Sigma;
-  sigmaRenderer = new SigmaClass(graph, wrap, {
-    renderEdgeLabels: false,
-    labelFont: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
-    labelSize: 11,
-    labelColor: {color: '#1a2a3a'},
-    defaultEdgeColor: '#b8d4ef',
-    defaultNodeColor: '#2980d9',
-  });
-
-  // Hover tooltip
-  var infoEl = document.getElementById('graph-info');
-  sigmaRenderer.on('enterNode', function(ev) {
-    var attrs = graph.getNodeAttributes(ev.node);
-    var nd = gd.nodes.find(function(n) { return n.id === ev.node; });
-    infoEl.innerHTML =
-      '<b>' + esc(attrs.label) + '</b><br>' +
-      chainName(nd ? nd.chainId : 0) +
-      ' · rep ' + (nd ? nd.rep : 0) +
-      (nd && nd.feedbacks ? ' · ' + nd.feedbacks + ' feedbacks' : '');
-    infoEl.style.display = '';
-  });
-  sigmaRenderer.on('leaveNode', function() { infoEl.style.display = 'none'; });
-
-  var meta = document.getElementById('graph-meta');
-  meta.textContent = gd.nodes.length + ' agents · ' + gd.edges.length + ' connections · ' + (gd.generatedAt || '').slice(0,10);
+  document.getElementById('graph-meta').textContent =
+    gd.nodes.length+' agents · '+gd.edges.length+' connections · '+(gd.generatedAt||'').slice(0,10);
 }
 
 function cp(btn, url) {
