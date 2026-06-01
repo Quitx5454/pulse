@@ -7,8 +7,9 @@ import { writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const OUT = join(__dirname, '..', 'public', 'data', 'xgate.json');
+const __dirname  = dirname(fileURLToPath(import.meta.url));
+const OUT        = join(__dirname, '..', 'public', 'data', 'xgate.json');
+const STATS_OUT  = join(__dirname, '..', 'public', 'data', 'stats.json');
 
 const LIMIT     = 50;   // API max is 50
 const TIMEOUT   = 20000;
@@ -116,6 +117,15 @@ async function main() {
   mkdirSync(dirname(OUT), { recursive: true });
   writeFileSync(OUT, JSON.stringify(rows));
   console.log(`Wrote ${rows.length} rows → ${OUT}`);
+
+  // Save ecosystem stats for client-side display (api.xgate.run has no CORS)
+  try {
+    const stats = await get('https://api.xgate.run/services/stats');
+    writeFileSync(STATS_OUT, JSON.stringify(stats));
+    console.log(`Wrote stats.json (${stats.totalAgents} agents, ${stats.totalResources} resources)`);
+  } catch(e) {
+    console.warn('Could not fetch stats:', e.message);
+  }
 }
 
 main().catch(e => { console.error(e); process.exit(1); });

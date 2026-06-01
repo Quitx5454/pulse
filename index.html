@@ -383,6 +383,7 @@ function buildXgateList(data) {
   document.getElementById('ag-count').textContent = '(' + list.length + ')';
   document.getElementById('st-agents').textContent = list.length;
   renderList(list);
+  fetchLeaderboard();
 }
 
 // ── RENDER AGENT LIST ────────────────────────────────
@@ -668,18 +669,31 @@ function openDetailByLbIdx(idx) {
   showDetailPanel(agent, matching);
 }
 
-async function fetchLeaderboard() {
-  var raw = await GET('https://api.xgate.run/leaderboard?limit=10', 60000);
-  if (raw && raw.results && raw.results.length) renderLeaderboard(raw.results);
+function fetchLeaderboard() {
+  // api.xgate.run has no CORS headers → fetch server-side and use xgateList
+  // xgateList is already in leaderboard rank order (fetched from /leaderboard endpoint by GH Actions)
+  var top = [];
+  for (var i = 0; i < xgateList.length && top.length < 10; i++) {
+    var a = xgateList[i];
+    if (!a.isOurs && !String(a.id).startsWith('http')) {
+      top.push({agentId: a.id, name: a.name, chainId: a.chainId,
+                reputationScore: a.rep, rankScore: a.rank, description: a.desc});
+    }
+  }
+  if (top.length) renderLeaderboard(top);
 }
 
 async function fetchEcosystemStats() {
-  var raw = await GET('https://api.xgate.run/services/stats', 300000);
-  if (!raw) return;
-  var agents    = raw.totalAgents    ? Number(raw.totalAgents).toLocaleString()    : '—';
-  var resources = raw.totalResources ? Number(raw.totalResources).toLocaleString() : '—';
-  document.getElementById('st-ecosystem').textContent =
-    agents + ' agents · ' + resources + ' services in ecosystem';
+  // api.xgate.run has no CORS headers → load pre-fetched stats.json (written by GH Actions)
+  try {
+    var r = await fetch('public/data/stats.json', {cache: 'no-store'});
+    if (!r.ok) return;
+    var raw = await r.json();
+    var agents    = raw.totalAgents    ? Number(raw.totalAgents).toLocaleString()    : '—';
+    var resources = raw.totalResources ? Number(raw.totalResources).toLocaleString() : '—';
+    document.getElementById('st-ecosystem').textContent =
+      agents + ' agents · ' + resources + ' services in ecosystem';
+  } catch(e) { /* stats.json not yet available */ }
 }
 
 function cp(btn, url) {
@@ -751,11 +765,7 @@ async function main() {
   }
 
   startCountdown();
-
-  // leaderboard + ecosystem stats — fire immediately, then every 60s
-  fetchLeaderboard();
   fetchEcosystemStats();
-  setInterval(fetchLeaderboard, 60000);
 }
 
 main();
