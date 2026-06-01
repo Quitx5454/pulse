@@ -688,6 +688,11 @@ function showDetailPanel(a, fbs) {
     inv.style.display = '';
   } else { inv.style.display = 'none'; }
 
+  // "Test Agent" (x402 pay) — only for our two testable agents
+  var TESTABLE_HOSTS = ['distill-agent-production.up.railway.app', 'parse-agent-production.up.railway.app'];
+  var canTest = !!(a.endpoints && a.endpoints.some(function(e) { return TESTABLE_HOSTS.indexOf(e.host) !== -1; }));
+  document.getElementById('rp-test').style.display = canTest ? '' : 'none';
+
   var el = document.getElementById('rp-fbs');
   if (fbs && fbs.length) {
     var html = '';
