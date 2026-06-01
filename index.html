@@ -161,9 +161,66 @@ body::before{
 .rx{padding:8px 14px;}
 .rxi{padding:5px 0;border-bottom:1px solid var(--border);font-size:10px;}
 .rxi:last-child{border-bottom:none;}
+
+/* ── MOBILE ─────────────────────────────────────────── */
+#mob-bar{display:none;}
+#backdrop{display:none;position:fixed;inset:0;background:rgba(10,30,60,.35);z-index:98;touch-action:none;}
+
+@media(max-width:768px){
+  /* top bar */
+  #mob-bar{
+    display:flex;align-items:center;gap:10px;
+    position:fixed;top:0;left:0;right:0;height:48px;
+    background:var(--panel);border-bottom:1px solid var(--border);
+    padding:0 14px;z-index:120;
+  }
+  #mob-bar h1{font-size:17px;font-weight:700;color:var(--navy);flex:1;}
+  .mob-btn{background:none;border:1px solid var(--border);padding:6px 10px;
+    font-size:14px;cursor:pointer;color:var(--muted);border-radius:2px;line-height:1;}
+  .mob-btn.active,.mob-btn:active{border-color:var(--accent);color:var(--accent);background:#eff7ff;}
+
+  /* left: hidden off-screen, slide in as drawer */
+  #left{
+    position:fixed;top:0;left:calc(-1 * var(--lw) - 4px);
+    height:100%;z-index:110;
+    transition:left .22s ease;
+    box-shadow:none;
+  }
+  #left.mob-open{left:0;box-shadow:6px 0 24px rgba(0,0,0,.15);}
+  #backdrop.show{display:block;}
+
+  /* center: full width below top bar */
+  #center{margin-top:48px;height:calc(100vh - 48px);}
+
+  /* right panel: full screen overlay */
+  #right.open{
+    position:fixed;top:48px;left:0;
+    width:100vw!important;min-width:100vw!important;
+    height:calc(100vh - 48px);z-index:115;
+  }
+
+  /* hide desktop-only elements */
+  .ph{display:none;}
+  #ref-info{display:none;}
+  #graph-btn{display:none;}
+
+  /* touch-friendlier tap targets */
+  .ali{padding:10px 14px;}
+  .cf-btn{padding:5px 11px;font-size:11px;}
+  .fc{padding:12px 14px;}
+  .al-search{padding:8px 10px;font-size:12px;}
+}
 </style>
 </head>
 <body>
+
+<!-- MOBILE TOP BAR -->
+<div id="mob-bar">
+  <button class="mob-btn" id="mob-menu" onclick="toggleMobileLeft()" aria-label="Menu">☰</button>
+  <h1>Pulse</h1>
+  <button class="mob-btn" id="mob-graph-btn" onclick="toggleGraph()" aria-label="Graph">◈</button>
+</div>
+<div id="backdrop" onclick="closeMobileLeft()"></div>
 
 <!-- LEFT -->
 <div id="left">
@@ -585,6 +642,7 @@ function showDetailPanel(a, fbs) {
 
   document.getElementById('right').classList.add('open');
   renderList(filteredList);
+  if (window.innerWidth <= 768) closeMobileLeft();
 }
 
 function openDetail(agentId) {
@@ -633,6 +691,25 @@ async function fetchEcosystemStats() {
   } catch(e) { /* stats.json not yet available */ }
 }
 
+// ── MOBILE NAV ────────────────────────────────────────
+function toggleMobileLeft() {
+  var left = document.getElementById('left');
+  var bd   = document.getElementById('backdrop');
+  var btn  = document.getElementById('mob-menu');
+  var open = left.classList.contains('mob-open');
+  left.classList.toggle('mob-open', !open);
+  bd.classList.toggle('show', !open);
+  btn.textContent = open ? '☰' : '✕';
+  btn.classList.toggle('active', !open);
+}
+function closeMobileLeft() {
+  document.getElementById('left').classList.remove('mob-open');
+  document.getElementById('backdrop').classList.remove('show');
+  var btn = document.getElementById('mob-menu');
+  btn.textContent = '☰';
+  btn.classList.remove('active');
+}
+
 // ── GRAPH VIEW ────────────────────────────────────────
 function loadScript(src) {
   return new Promise(function(resolve, reject) {
@@ -657,6 +734,8 @@ async function toggleGraph() {
     btn.textContent = '◈ Graph';
     titleEl.textContent = 'Live Activity';
     refEl.style.display = '';
+    var mobG = document.getElementById('mob-graph-btn');
+    if (mobG) { mobG.classList.remove('active'); mobG.textContent = '◈'; }
     return;
   }
 
@@ -666,6 +745,8 @@ async function toggleGraph() {
   btn.textContent = '✕ Feed';
   titleEl.textContent = 'Network Graph';
   refEl.style.display = 'none';
+  var mobG = document.getElementById('mob-graph-btn');
+  if (mobG) { mobG.classList.add('active'); mobG.textContent = '✕'; }
 
   if (!graphLoaded) await initGraph();
 }
