@@ -394,12 +394,19 @@ textarea.tm-in{resize:vertical;min-height:46px;}
     </div>
     <div class="tm-bd">
       <div class="tm-warn" id="tm-warn">⚠ MetaMask not detected. Install MetaMask to pay & test.</div>
+      <label class="tm-lbl" for="tm-method">Method</label>
+      <select class="tm-in" id="tm-method" onchange="onMethodChange()">
+        <option value="POST">POST</option>
+        <option value="GET">GET</option>
+      </select>
       <label class="tm-lbl" for="tm-endpoint">Endpoint URL</label>
       <input class="tm-in" id="tm-endpoint" type="text" placeholder="https://…/entrypoints/…/invoke">
       <label class="tm-lbl" for="tm-amount">Amount (USDC) · fallback if server omits it</label>
       <input class="tm-in" id="tm-amount" type="text" placeholder="0.01">
-      <label class="tm-lbl" for="tm-body">Request body (JSON, optional)</label>
-      <textarea class="tm-in" id="tm-body" placeholder='{ }'></textarea>
+      <div id="tm-body-wrap">
+        <label class="tm-lbl" for="tm-body">Request body (JSON, optional)</label>
+        <textarea class="tm-in" id="tm-body" placeholder='{ }'></textarea>
+      </div>
       <button class="tm-pay" id="tm-pay">Connect &amp; Pay</button>
       <div class="tm-log" id="tm-log"></div>
       <div class="tm-result" id="tm-result"></div>
@@ -1030,12 +1037,19 @@ function openTestModal() {
   document.getElementById('tm-endpoint').value = ep;
   document.getElementById('tm-amount').value   = amt || '0.01';
   document.getElementById('tm-body').value      = '';
+  document.getElementById('tm-method').value    = 'POST';
+  onMethodChange();
   document.getElementById('tm-log').innerHTML   = '';
   var res = document.getElementById('tm-result');
   res.style.display = 'none'; res.textContent = '';
   // MetaMask presence warning
   document.getElementById('tm-warn').classList.toggle('show', typeof window.ethereum === 'undefined');
   document.getElementById('test-modal').classList.add('open');
+}
+// Hide the request-body field for GET (no body is sent).
+function onMethodChange() {
+  var isGet = document.getElementById('tm-method').value === 'GET';
+  document.getElementById('tm-body-wrap').style.display = isGet ? 'none' : '';
 }
 function closeTestModal() {
   document.getElementById('test-modal').classList.remove('open');
@@ -1178,17 +1192,27 @@ async function x402Pay(opts) {
 
   var endpoint = opts.endpoint;
   var reqUrl   = proxied(endpoint);   // route through CORS proxy when configured
+  var method   = (opts.method || 'POST').toUpperCase();
+  var isGet    = method === 'GET';
   var body     = opts.body || {};
+
+  // Build fetch init for this method: GET sends no body / Content-Type.
+  // extraHeaders lets the retry add PAYMENT-SIGNATURE.
+  function reqInit(extraHeaders) {
+    var headers = Object.assign({}, extraHeaders || {});
+    var init = { method: method, headers: headers };
+    if (!isGet) {
+      headers['Content-Type'] = 'application/json';
+      init.body = JSON.stringify(body);
+    }
+    return init;
+  }
 
   if (PROXY_URL) tmLog('  via CORS proxy', 'ok');
 
   // (a) initial request — no payment
-  tmLog('→ Requesting endpoint (no payment)…');
-  var res = await fetch(reqUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
+  tmLog('→ ' + method + ' endpoint (no payment)…');
+  var res = await fetch(reqUrl, reqInit());
   tmLog('  server responded <b>' + res.status + '</b>');
 
   if (res.status !== 402) {
@@ -1278,11 +1302,7 @@ async function x402Pay(opts) {
   var sigHeader = btoa(JSON.stringify(payload));
 
   tmLog('→ Sending payment & retrying…');
-  var res2 = await fetch(reqUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'PAYMENT-SIGNATURE': sigHeader },
-    body: JSON.stringify(body)
-  });
+  var res2 = await fetch(reqUrl, reqInit({ 'PAYMENT-SIGNATURE': sigHeader }));
   tmLog('  server responded <b>' + res2.status + '</b>');
 
   // (e) result
@@ -1295,6 +1315,7 @@ async function x402Pay(opts) {
 document.getElementById('tm-pay').addEventListener('click', async function () {
   var btn      = this;
   var endpoint = document.getElementById('tm-endpoint').value.trim();
+  var method   = document.getElementById('tm-method').value;
   var amount   = document.getElementById('tm-amount').value.trim();
   var bodyRaw  = document.getElementById('tm-body').value.trim();
   var resEl    = document.getElementById('tm-result');
@@ -1308,15 +1329,16 @@ document.getElementById('tm-pay').addEventListener('click', async function () {
     tmLog('✗ MetaMask required — install MetaMask to continue', 'err');
     return;
   }
+  // GET sends no body; only parse the body field for POST.
   var body = {};
-  if (bodyRaw) {
+  if (method === 'POST' && bodyRaw) {
     try { body = JSON.parse(bodyRaw); }
     catch (e) { tmLog('✗ Request body is not valid JSON', 'err'); return; }
   }
 
   btn.disabled = true; btn.textContent = 'Processing…';
   try {
-    var result = await x402Pay({ endpoint: endpoint, amountUsdc: amount, body: body });
+    var result = await x402Pay({ endpoint: endpoint, method: method, amountUsdc: amount, body: body });
     var pretty = (typeof result === 'string') ? result : JSON.stringify(result, null, 2);
     if (pretty === undefined || pretty === '' || pretty === 'null') pretty = '(empty response body)';
     tmLog('  response body ↓', 'ok');
