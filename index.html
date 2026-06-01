@@ -94,20 +94,6 @@ body::before{
 .upd-offline{background:#e74c3c;}
 .upd-unknown{background:var(--border);}
 
-/* leaderboard */
-.lb-row{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border);cursor:pointer;}
-.lb-row:last-child{border-bottom:none;}
-.lb-row:hover{background:var(--bg);margin:0 -14px;padding:4px 14px;}
-.lb-rank{width:16px;height:16px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;}
-.lb-gold{background:#f59e0b;color:#fff;}
-.lb-silver{background:#94a3b8;color:#fff;}
-.lb-bronze{background:#b45309;color:#fff;}
-.lb-rest{background:var(--bg);color:var(--muted);border:1px solid var(--border);}
-.lb-info{flex:1;min-width:0;}
-.lb-name{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
-.lb-chain{font-size:9px;color:var(--muted);font-family:monospace;}
-.lb-sc{font-size:10px;font-family:monospace;font-weight:700;flex-shrink:0;}
-
 /* ── CENTER ── */
 #center{flex:1;height:100vh;display:flex;flex-direction:column;z-index:5;}
 #feed-hdr{
@@ -227,10 +213,6 @@ body::before{
       </div>
     </div>
   </div>
-  <div class="sec">
-    <div class="sec-title">Top Agents <span id="lb-ts" style="font-weight:400;font-size:8px;color:var(--muted);"></span></div>
-    <div id="lb-list" style="font-size:10px;color:var(--muted);padding:4px 0;">Loading leaderboard…</div>
-  </div>
   <div class="sec" style="padding-bottom:4px;">
     <div class="sec-title">Agents <span id="ag-count" style="font-weight:400"></span></div>
     <div style="display:flex;gap:4px;margin-bottom:7px;flex-wrap:wrap;">
@@ -333,7 +315,6 @@ let healthData      = {};
 let healthLoaded    = false;
 let searchTimer     = null;
 let semanticIds     = new Set();
-let leaderboardData = [];
 let graphLoaded     = false;
 let sigmaRenderer   = null;
 
@@ -401,7 +382,6 @@ function buildXgateList(data) {
   document.getElementById('ag-count').textContent = '(' + list.length + ')';
   document.getElementById('st-agents').textContent = list.length;
   renderList(list);
-  fetchLeaderboard();
 }
 
 // ── RENDER AGENT LIST ────────────────────────────────
@@ -639,66 +619,6 @@ function closeDetail() {
   selectedId = null;
   document.getElementById('right').classList.remove('open');
   renderList(filteredList);
-}
-
-// ── LEADERBOARD ───────────────────────────────────────
-var LB_MEDALS = ['lb-gold','lb-silver','lb-bronze'];
-
-function renderLeaderboard(agents) {
-  leaderboardData = agents;
-  var html = '';
-  for (var i = 0; i < agents.length; i++) {
-    var a = agents[i];
-    var sc = a.reputationScore || 0;
-    var scCls = sc >= 80 ? 'g' : (sc >= 50 ? 'b' : 'gr');
-    var rankCls = i < 3 ? LB_MEDALS[i] : 'lb-rest';
-    html +=
-      '<div class="lb-row" onclick="openDetailByLbIdx(' + i + ')">' +
-        '<div class="lb-rank ' + rankCls + '">' + (i + 1) + '</div>' +
-        '<div class="lb-info">' +
-          '<div class="lb-name">' + esc(a.name || 'Unknown') + '</div>' +
-          '<div class="lb-chain">' + chainName(a.chainId) + '</div>' +
-        '</div>' +
-        '<div class="lb-sc ' + scCls + '">' + sc + '</div>' +
-      '</div>';
-  }
-  document.getElementById('lb-list').innerHTML = html ||
-    '<div style="color:var(--muted);">No data</div>';
-  var d = new Date();
-  document.getElementById('lb-ts').textContent =
-    '· ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
-}
-
-function openDetailByLbIdx(idx) {
-  var a = leaderboardData[idx];
-  if (!a) return;
-  var id = String(a.agentId || a.id || '');
-  if (xgateById[id]) { selectedId = id; openDetail(id); return; }
-  // agent not yet in local list — show panel with leaderboard data
-  selectedId = id;
-  var agent = {id: id, name: a.name || 'Unknown', chainId: a.chainId || 0,
-               chain: chainName(a.chainId || 0), desc: a.description || '',
-               rep: a.reputationScore || 0, rank: a.rankScore || 0, endpoints: []};
-  var nameLower = (a.name || '').toLowerCase();
-  var matching = feedFbsAll.filter(function(fb) {
-    return fb.agent_id === id ||
-           ((fb.agent && fb.agent.name) || '').toLowerCase() === nameLower;
-  });
-  showDetailPanel(agent, matching);
-}
-
-function fetchLeaderboard() {
-  // api.xgate.run has no CORS headers → fetch server-side and use xgateList
-  // xgateList is already in leaderboard rank order (fetched from /leaderboard endpoint by GH Actions)
-  var top = [];
-  for (var i = 0; i < xgateList.length && top.length < 10; i++) {
-    var a = xgateList[i];
-    if (!a.isOurs && !String(a.id).startsWith('http')) {
-      top.push({agentId: a.id, name: a.name, chainId: a.chainId,
-                reputationScore: a.rep, rankScore: a.rank, description: a.desc});
-    }
-  }
-  if (top.length) renderLeaderboard(top);
 }
 
 async function fetchEcosystemStats() {
