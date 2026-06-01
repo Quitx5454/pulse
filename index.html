@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pulse — Live Agent Economy</title>
+<title>Distill — middleware for the agent economy</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -15,14 +15,13 @@
   --navy:#1a3a6e;
   --text:#1a2a3a;
   --muted:#5a7a9a;
-  --lw:270px;
-  --rw:310px;
+  --lw:300px;
 }
-html,body{height:100%;overflow:hidden;}
+html,body{height:100%;}
 body{
   background:var(--bg);color:var(--text);
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  font-size:13px;display:flex;
+  font-size:13px;display:flex;min-height:100vh;
 }
 body::before{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
@@ -30,200 +29,69 @@ body::before{
     linear-gradient(90deg,var(--grid) 1px,transparent 1px);
   background-size:40px 40px;opacity:.2;
 }
-::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-thumb{background:var(--border);}
 
-/* ── LEFT ── */
+/* ── LEFT PANEL ── */
 #left{
-  width:var(--lw);min-width:var(--lw);height:100vh;
+  width:var(--lw);min-width:var(--lw);min-height:100vh;
   background:var(--panel);border-right:1px solid var(--border);
   display:flex;flex-direction:column;z-index:10;
+  position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;
 }
-.ph{padding:14px 14px 10px;border-bottom:1px solid var(--border);}
-.ph h1{font-size:19px;font-weight:700;color:var(--navy);}
-.ph p{font-size:10px;color:var(--muted);margin-top:2px;font-family:monospace;}
+.ph{padding:18px 18px 14px;border-bottom:1px solid var(--border);}
+.ph h1{font-size:22px;font-weight:700;color:var(--navy);letter-spacing:-.5px;}
+.ph p{font-size:10px;color:var(--muted);margin-top:3px;font-family:monospace;}
 
-.sec{padding:8px 14px;border-bottom:1px solid var(--border);}
-.sec-title{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
-
-/* stats */
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
-.sbox{background:var(--bg);border:1px solid var(--border);padding:7px;}
-.sl{font-size:9px;color:var(--muted);text-transform:uppercase;}
-.sv{font-size:15px;font-weight:700;color:var(--navy);font-family:monospace;margin-top:1px;}
+.sec{padding:14px 18px;border-bottom:1px solid var(--border);}
+.sec-title{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px;}
 
 /* our agents */
-.our-card{background:var(--bg);border:1px solid var(--accent);padding:7px;margin-bottom:5px;}
+.our-card{background:var(--bg);border:1px solid var(--accent);padding:10px;margin-bottom:10px;}
 .our-card:last-child{margin-bottom:0;}
-.our-name{font-weight:700;color:var(--accent);font-size:11px;margin-bottom:4px;}
-.ep-row{display:flex;align-items:center;gap:4px;padding:2px 0;border-top:1px solid var(--border);}
-.ep-path{font-family:monospace;font-size:9px;color:var(--navy);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;}
-.ep-price{font-size:9px;font-family:monospace;color:var(--accent);white-space:nowrap;}
-.cp{background:none;border:1px solid var(--border);padding:1px 4px;font-size:8px;cursor:pointer;color:var(--muted);font-family:monospace;}
+.our-name{font-weight:700;color:var(--accent);font-size:13px;margin-bottom:2px;}
+.our-url{font-size:9px;color:var(--muted);font-family:monospace;margin-bottom:5px;word-break:break-all;}
+.our-desc{font-size:10px;color:var(--text);line-height:1.45;margin-bottom:8px;}
+.ep-row{display:flex;align-items:center;gap:5px;padding:5px 0;border-top:1px solid var(--border);}
+.ep-path{font-family:monospace;font-size:9px;color:var(--navy);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ep-price{font-size:9px;font-family:monospace;color:var(--accent);white-space:nowrap;font-weight:700;}
+.cp{background:none;border:1px solid var(--border);padding:2px 5px;font-size:8px;cursor:pointer;color:var(--muted);font-family:monospace;}
 .cp:hover{border-color:var(--accent);color:var(--accent);}
 .cp.ok{border-color:#27ae60;color:#27ae60;}
 
-/* agent list */
-.al-search{
-  width:100%;padding:6px 10px;border:1px solid var(--border);
-  background:var(--bg);font-size:11px;color:var(--text);outline:none;
-  font-family:monospace;display:block;
-}
-.al-search:focus{border-color:var(--accent);}
-#agent-list{flex:1;overflow-y:auto;}
-.ali{
-  display:flex;align-items:center;gap:7px;padding:7px 14px;
-  border-bottom:1px solid var(--border);cursor:pointer;
-}
-.ali:hover,.ali.sel{background:var(--bg);}
-.ali.sel{border-left:2px solid var(--accent);}
-.av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0;}
-.an{font-weight:600;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.am{font-size:9px;color:var(--muted);font-family:monospace;margin-top:1px;}
-.asc{font-size:10px;font-family:monospace;font-weight:700;flex-shrink:0;}
-.g{color:#27ae60;}.b{color:var(--accent);}.gr{color:var(--muted);}
-
-/* chain filter */
-.cf-btn{background:#fff;border:1px solid var(--border);padding:3px 9px;font-size:10px;font-family:monospace;cursor:pointer;color:var(--muted);border-radius:2px;}
-.cf-btn:hover{border-color:var(--accent);color:var(--accent);}
-.cf-btn.active{background:#eff7ff;border-color:var(--accent);color:var(--accent);font-weight:700;}
-
-/* uptime dot */
-.upd{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-left:5px;align-self:center;}
-.upd-online{background:#27ae60;}
-.upd-offline{background:#e74c3c;}
-.upd-unknown{background:var(--border);}
-
-/* ── CENTER ── */
-#center{flex:1;height:100vh;display:flex;flex-direction:column;z-index:5;}
-#feed-hdr{
-  background:var(--panel);border-bottom:1px solid var(--border);
-  padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;
-}
-#feed-hdr h2{font-size:13px;font-weight:700;color:var(--navy);}
-.lp{display:flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--border);padding:3px 7px;font-size:10px;font-weight:600;font-family:monospace;color:var(--navy);}
-.ld{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:blink 1.4s infinite;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
-#ref-info{font-size:10px;color:var(--muted);font-family:monospace;margin-left:auto;}
-#graph-btn{background:none;border:1px solid var(--border);padding:3px 9px;font-size:10px;font-family:monospace;cursor:pointer;color:var(--muted);border-radius:2px;flex-shrink:0;}
-#graph-btn:hover,#graph-btn.active{border-color:var(--accent);color:var(--accent);background:#eff7ff;}
-
-#feed{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:8px;}
-
-/* graph view */
-#graph-view{display:none;flex:1;flex-direction:column;position:relative;}
-#graph-view.active{display:flex;}
-#sigma-wrap{flex:1;width:100%;position:relative;}
-.g-overlay{position:absolute;pointer-events:none;z-index:10;background:var(--panel);border:1px solid var(--border);padding:6px 10px;font-size:10px;font-family:monospace;}
-#graph-info{top:10px;left:10px;display:none;max-width:200px;}
-#graph-meta{bottom:10px;left:10px;color:var(--muted);font-size:9px;}
-.fc{
-  background:var(--panel);border:1px solid var(--border);padding:10px 12px;
-  cursor:pointer;transition:border-color .1s;
-}
-.fc:hover{border-color:var(--accent);}
-.fc-new{animation:drop .25s ease;}
-@keyframes drop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
-.fc-top{display:flex;gap:8px;}
-.fc-body{flex:1;min-width:0;}
-.fc-name{font-weight:700;font-size:12px;color:var(--navy);}
-.fc-ep{font-size:10px;font-family:monospace;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.fc-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;}
-.tag{font-size:9px;font-family:monospace;padding:1px 5px;background:var(--bg);border:1px solid var(--border);color:var(--muted);}
-.tg{border-color:#27ae60;color:#27ae60;background:#f0fff4;}
-.tb{border-color:var(--accent);color:var(--accent);background:#eff7ff;}
-.fc-foot{margin-top:5px;font-size:10px;font-family:monospace;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;}
-.fc-foot a{color:var(--accent);text-decoration:none;}
-.fc-foot a:hover{text-decoration:underline;}
-.empty{text-align:center;padding:50px 20px;color:var(--muted);font-family:monospace;font-size:11px;}
-
-/* ── RIGHT ── */
-#right{
-  width:0;min-width:0;height:100vh;background:var(--panel);
-  border-left:1px solid var(--border);overflow:hidden;
-  transition:width .2s,min-width .2s;z-index:10;
-}
-#right.open{width:var(--rw);min-width:var(--rw);}
-#ri{width:var(--rw);overflow-y:auto;height:100%;}
-.rh{padding:12px 14px 8px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--panel);z-index:2;}
-.rc{float:right;background:none;border:none;font-size:15px;cursor:pointer;color:var(--muted);}
-.rc:hover{color:var(--text);}
-.rar{display:flex;align-items:center;gap:8px;margin-top:6px;clear:both;}
-.rav{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;}
-.rn{font-size:16px;font-weight:700;color:var(--navy);}
-.rd{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4;}
-.rs{padding:8px 14px;border-bottom:1px solid var(--border);}
-.rf{display:flex;justify-content:space-between;align-items:center;padding:3px 0;}
-.rl{color:var(--muted);font-size:10px;}
-.rv{font-weight:600;font-size:10px;font-family:monospace;}
-.inv{display:block;margin:10px 14px;padding:8px;background:var(--accent);color:#fff;border:none;font-size:11px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;font-family:monospace;}
-.inv:hover{background:var(--navy);}
-.rx{padding:8px 14px;}
-.rxi{padding:5px 0;border-bottom:1px solid var(--border);font-size:10px;}
-.rxi:last-child{border-bottom:none;}
-
-/* ── MOBILE ─────────────────────────────────────────── */
-#mob-bar{display:none;}
-#backdrop{display:none;position:fixed;inset:0;background:rgba(10,30,60,.35);z-index:98;touch-action:none;}
-
-@media(max-width:768px){
-  /* top bar */
-  #mob-bar{
-    display:flex;align-items:center;gap:10px;
-    position:fixed;top:0;left:0;right:0;height:48px;
-    background:var(--panel);border-bottom:1px solid var(--border);
-    padding:0 14px;z-index:120;
-  }
-  #mob-bar h1{font-size:17px;font-weight:700;color:var(--navy);flex:1;}
-  .mob-btn{background:none;border:1px solid var(--border);padding:6px 10px;
-    font-size:14px;cursor:pointer;color:var(--muted);border-radius:2px;line-height:1;}
-  .mob-btn.active,.mob-btn:active{border-color:var(--accent);color:var(--accent);background:#eff7ff;}
-
-  /* left: hidden off-screen, slide in as drawer */
-  #left{
-    position:fixed;top:0;left:calc(-1 * var(--lw) - 4px);
-    height:100%;z-index:110;
-    transition:left .22s ease;
-    box-shadow:none;
-  }
-  #left.mob-open{left:0;box-shadow:6px 0 24px rgba(0,0,0,.15);}
-  #backdrop.show{display:block;}
-
-  /* center: full width below top bar */
-  #center{margin-top:48px;height:calc(100vh - 48px);}
-
-  /* right panel: full screen overlay */
-  #right.open{
-    position:fixed;top:48px;left:0;
-    width:100vw!important;min-width:100vw!important;
-    height:calc(100vh - 48px);z-index:115;
-  }
-
-  /* hide desktop-only elements */
-  .ph{display:none;}
-  #ref-info{display:none;}
-  #graph-btn{display:none;}
-
-  /* touch-friendlier tap targets */
-  .ali{padding:10px 14px;}
-  .cf-btn{padding:5px 11px;font-size:11px;}
-  .fc{padding:12px 14px;}
-  .al-search{padding:8px 10px;font-size:12px;}
-}
-
-/* ── TEST AGENT MODAL (x402 v2) ───────────────────────── */
-.test-btn{
-  display:block;margin:0 14px 10px;padding:8px;background:var(--navy);color:#fff;
-  border:none;font-size:11px;font-weight:700;cursor:pointer;text-align:center;
-  font-family:monospace;width:calc(100% - 28px);
-}
-.test-btn:hover{background:#0f2547;}
 .side-test-btn{
-  display:block;width:100%;margin-top:6px;padding:7px;
-  background:var(--accent);color:#fff;border:none;border-radius:2px;
-  font-size:11px;font-weight:700;cursor:pointer;font-family:monospace;
+  display:block;width:100%;padding:10px;
+  background:var(--accent);color:#fff;border:none;
+  font-size:12px;font-weight:700;cursor:pointer;font-family:monospace;
 }
 .side-test-btn:hover{background:var(--navy);}
+
+/* ── CENTER ── */
+#center{
+  flex:1;min-height:100vh;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;z-index:5;padding:60px 40px;
+}
+.hero{max-width:680px;width:100%;}
+.hero h2{font-size:38px;font-weight:700;color:var(--navy);letter-spacing:-1px;line-height:1.1;}
+.hero p{font-size:15px;color:var(--text);line-height:1.7;margin-top:18px;}
+.hero .accent-line{font-size:15px;color:var(--accent);font-weight:600;margin-top:6px;font-family:monospace;}
+.divider{height:1px;background:var(--border);margin:36px 0;}
+
+.coming-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:14px;}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.coming-card{
+  background:var(--panel);border:1px solid var(--border);padding:16px;
+  position:relative;
+}
+.coming-card .cc-name{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px;}
+.coming-card .cc-desc{font-size:11px;color:var(--muted);line-height:1.5;}
+.coming-card .cc-soon{
+  display:inline-block;margin-top:12px;font-size:8px;font-family:monospace;
+  color:var(--muted);border:1px solid var(--border);padding:2px 6px;
+  text-transform:uppercase;letter-spacing:1px;
+}
+
+/* ── TEST AGENT MODAL (x402 v2) ── */
 #test-modal{
   display:none;position:fixed;inset:0;z-index:200;
   align-items:center;justify-content:center;
@@ -266,128 +134,97 @@ textarea.tm-in{resize:vertical;min-height:46px;}
   font-family:monospace;font-size:10px;white-space:pre-wrap;word-break:break-word;
   max-height:220px;overflow:auto;display:none;
 }
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  body{flex-direction:column;}
+  #left{
+    position:static;width:100%;min-width:0;height:auto;
+    border-right:none;border-bottom:1px solid var(--border);
+  }
+  #center{padding:40px 22px;min-height:auto;}
+  .hero h2{font-size:28px;}
+  .hero p{font-size:14px;}
+  .cards{grid-template-columns:1fr;}
+}
 </style>
 </head>
 <body>
 
-<!-- MOBILE TOP BAR -->
-<div id="mob-bar">
-  <button class="mob-btn" id="mob-menu" onclick="toggleMobileLeft()" aria-label="Menu">☰</button>
-  <h1>Pulse</h1>
-  <button class="mob-btn" id="mob-graph-btn" onclick="toggleGraph()" aria-label="Graph">◈</button>
-</div>
-<div id="backdrop" onclick="closeMobileLeft()"></div>
-
 <!-- LEFT -->
 <div id="left">
   <div class="ph">
-    <h1>Pulse</h1>
-    <p>live agent economy · 8004scan</p>
+    <h1>Distill</h1>
+    <p>middleware for the agent economy</p>
   </div>
-  <div class="sec">
-    <div class="sec-title">Network</div>
-    <div class="stats">
-      <div class="sbox"><div class="sl">Active Agents</div><div class="sv" id="st-agents">—</div></div>
-      <div class="sbox"><div class="sl">Total Feedbacks</div><div class="sv" id="st-txns">—</div></div>
-    </div>
-    <div style="margin-top:5px;background:var(--bg);border:1px solid var(--border);padding:6px 7px;display:flex;align-items:center;gap:5px;">
-      <div style="width:5px;height:5px;border-radius:50%;background:#27ae60;flex-shrink:0;"></div>
-      <div id="st-ecosystem" style="font-size:9px;color:var(--muted);font-family:monospace;">loading ecosystem…</div>
-    </div>
-  </div>
+
   <div class="sec">
     <div class="sec-title">Our Agents</div>
+
     <div class="our-card">
-      <div class="our-name">Distill</div>
-      <div style="font-size:9px;color:var(--muted);margin-bottom:4px;">distill-agent-production.up.railway.app</div>
+      <div class="our-name">Refine</div>
+      <div class="our-url">distill-agent-production.up.railway.app</div>
+      <div class="our-desc">strips bot activity from raw on-chain transaction data</div>
       <div class="ep-row">
-        <div style="flex:1;min-width:0;"><div class="ep-path">/entrypoints/process/invoke</div><div style="font-size:8px;color:var(--muted);">blockchain data cleaning</div></div>
+        <div class="ep-path" title="/entrypoints/process/invoke">/entrypoints/process/invoke</div>
         <span class="ep-price">0.02 USDC</span>
         <button class="cp" onclick="cp(this,'https://distill-agent-production.up.railway.app/entrypoints/process/invoke')">copy</button>
       </div>
     </div>
+
     <div class="our-card">
       <div class="our-name">Parse</div>
-      <div style="font-size:9px;color:var(--muted);margin-bottom:4px;">parse-agent-production.up.railway.app</div>
+      <div class="our-url">parse-agent-production.up.railway.app</div>
+      <div class="our-desc">converts raw HTML into structured JSON</div>
       <div class="ep-row">
-        <div style="flex:1;min-width:0;"><div class="ep-path">/entrypoints/product/invoke</div><div style="font-size:8px;color:var(--muted);">HTML→JSON</div></div>
-        <span class="ep-price">0.01</span>
+        <div class="ep-path" title="/entrypoints/product/invoke">/entrypoints/product/invoke</div>
+        <span class="ep-price">0.01 USDC</span>
         <button class="cp" onclick="cp(this,'https://parse-agent-production.up.railway.app/entrypoints/product/invoke')">copy</button>
       </div>
       <div class="ep-row">
-        <div style="flex:1;min-width:0;"><div class="ep-path">/entrypoints/serp/invoke</div><div style="font-size:8px;color:var(--muted);">SERP→JSON</div></div>
-        <span class="ep-price">0.01</span>
+        <div class="ep-path" title="/entrypoints/serp/invoke">/entrypoints/serp/invoke</div>
+        <span class="ep-price">0.01 USDC</span>
         <button class="cp" onclick="cp(this,'https://parse-agent-production.up.railway.app/entrypoints/serp/invoke')">copy</button>
       </div>
       <div class="ep-row">
-        <div style="flex:1;min-width:0;"><div class="ep-path">/entrypoints/entity/invoke</div><div style="font-size:8px;color:var(--muted);">text→entities</div></div>
-        <span class="ep-price">0.01</span>
+        <div class="ep-path" title="/entrypoints/entity/invoke">/entrypoints/entity/invoke</div>
+        <span class="ep-price">0.01 USDC</span>
         <button class="cp" onclick="cp(this,'https://parse-agent-production.up.railway.app/entrypoints/entity/invoke')">copy</button>
       </div>
     </div>
-    <button class="side-test-btn" onclick="openTestModal(true)">⚡ Test any agent</button>
   </div>
-  <div class="sec" style="padding-bottom:4px;">
-    <div class="sec-title">Agents <span id="ag-count" style="font-weight:400"></span></div>
-    <div style="display:flex;gap:4px;margin-bottom:7px;flex-wrap:wrap;">
-      <button class="cf-btn active" data-chain="" onclick="chainFilter(null)">All</button>
-      <button class="cf-btn" data-chain="8453" onclick="chainFilter(8453)">Base</button>
-      <button class="cf-btn" data-chain="100" onclick="chainFilter(100)">Gnosis</button>
-      <button class="cf-btn" data-chain="1399811149" onclick="chainFilter(1399811149)">Solana</button>
-    </div>
-    <input class="al-search" type="text" placeholder="search…" oninput="filterList(this.value)">
+
+  <div class="sec">
+    <button class="side-test-btn" onclick="openTestModal()">⚡ Test any agent</button>
   </div>
-  <div id="agent-list"><div class="empty" style="padding:20px;">Loading…</div></div>
 </div>
 
 <!-- CENTER -->
 <div id="center">
-  <div id="feed-hdr">
-    <h2 id="feed-hdr-title">Live Activity</h2>
-    <div class="lp"><span class="ld"></span>LIVE</div>
-    <button id="graph-btn" onclick="toggleGraph()">◈ Graph</button>
-    <div id="ref-info">refreshes every 15s · next: <span id="nxt">15s</span></div>
-  </div>
-  <div id="feed"><div class="empty" id="feed-init">Loading…</div></div>
-  <div id="graph-view">
-    <div id="sigma-wrap"><div class="empty">Loading graph…</div></div>
-    <div class="g-overlay" id="graph-info"></div>
-    <div class="g-overlay" id="graph-meta"></div>
-  </div>
-</div>
+  <div class="hero">
+    <h2>Pure signal, no noise.</h2>
+    <p>Distill builds stateless middleware agents for the x402/ERC-8004 economy. Clean data, safe execution, verifiable trust.</p>
+    <div class="accent-line">Pay per call in USDC on Base. No accounts. No subscriptions.</div>
 
-<!-- RIGHT -->
-<div id="right">
-  <div id="ri">
-    <div class="rh">
-      <button class="rc" onclick="closeDetail()">✕</button>
-      <div class="rar">
-        <div class="rav" id="rp-av"></div>
-        <div>
-          <div class="rn" id="rp-name"></div>
-          <div class="rd" id="rp-desc"></div>
-        </div>
+    <div class="divider"></div>
+
+    <div class="coming-label">Coming soon</div>
+    <div class="cards">
+      <div class="coming-card">
+        <div class="cc-name">Align</div>
+        <div class="cc-desc">maps chaotic JSON to strict schemas</div>
+        <span class="cc-soon">soon</span>
       </div>
-    </div>
-    <div class="rs">
-      <div class="rf"><span class="rl">Chain</span><span class="rv" id="rp-chain">—</span></div>
-      <div class="rf"><span class="rl">Latest Score</span><span class="rv" id="rp-score">—</span></div>
-      <div class="rf"><span class="rl">Feedbacks seen</span><span class="rv" id="rp-fbc">—</span></div>
-      <div class="rf"><span class="rl">Last activity</span><span class="rv" id="rp-last">—</span></div>
-    </div>
-    <div class="rx" id="rp-about-wrap">
-      <div class="sec-title" style="margin-bottom:4px;">About</div>
-      <div id="rp-about" style="font-size:11px;color:var(--text);line-height:1.5;"></div>
-    </div>
-    <div class="rx" id="rp-eps-wrap" style="display:none;">
-      <div class="sec-title" style="margin-bottom:6px;">Endpoints <span id="rp-eps-note" style="font-weight:400;color:var(--muted);"></span></div>
-      <div id="rp-eps"></div>
-    </div>
-    <a class="inv" id="rp-inv" href="#" target="_blank" style="display:none">Invoke →</a>
-    <button class="test-btn" id="rp-test" onclick="openTestModal()">⚡ Test Agent (x402 pay)</button>
-    <div class="rx">
-      <div class="sec-title" style="margin-bottom:6px;">Recent Feedbacks</div>
-      <div id="rp-fbs"><div style="color:var(--muted);font-size:10px;">Select an agent</div></div>
+      <div class="coming-card">
+        <div class="cc-name">Shield</div>
+        <div class="cc-desc">sanitizes x402 metadata, strips PII</div>
+        <span class="cc-soon">soon</span>
+      </div>
+      <div class="coming-card">
+        <div class="cc-name">Forge</div>
+        <div class="cc-desc">compiles ERC-8004 reputation proofs</div>
+        <span class="cc-soon">soon</span>
+      </div>
     </div>
   </div>
 </div>
@@ -423,15 +260,9 @@ textarea.tm-in{resize:vertical;min-height:46px;}
 
 <script>
 // ─────────────────────────────────────────────────────
-// PULSE — xgate.run Agent Explorer + Live Activity Feed
-// Agent list: 123 unique agents from xgate.run marketplace
-//   (fetched server-side and embedded — xgate API has no CORS)
-// Live feed: 8004scan.io feedback stream (refreshes every 15s)
+// DISTILL — middleware for the agent economy
+// Static showcase + in-browser x402 v2 "Test any agent" client.
 // ─────────────────────────────────────────────────────
-
-// XGATE_DATA loaded at runtime from /data/xgate.json (fetched by GitHub Actions every 6h)
-// Format per row: [agentId, chainId, name, desc, reputationScore, rankScore]
-var XGATE_DATA_FALLBACK = [];
 
 // Cloudflare Worker CORS proxy (see workers/x402-proxy/). Global so both this
 // classic script and the x402 payment module below share one config.
@@ -440,590 +271,7 @@ var XGATE_DATA_FALLBACK = [];
 //          browser, even ones without CORS headers.
 var PROXY_URL = 'https://x402-proxy.pulse-x402.workers.dev';
 
-// ── OUR AGENTS (always pinned at top) ────────────────
-const OUR = [
-  {id:'distill', name:'Distill', chainId:8453, chain:'Base',
-   desc:'Blockchain data cleaning & normalization',
-   rep:100, rank:100, isOurs:true,
-   endpoints:[{p:'/entrypoints/process/invoke', pr:'0.02 USDC', d:'blockchain data cleaning',
-               host:'distill-agent-production.up.railway.app'}]},
-  {id:'parse', name:'Parse', chainId:8453, chain:'Base',
-   desc:'Structured data extraction from web content',
-   rep:100, rank:100, isOurs:true,
-   endpoints:[
-     {p:'/entrypoints/product/invoke', pr:'0.01 USDC', d:'HTML to JSON', host:'parse-agent-production.up.railway.app'},
-     {p:'/entrypoints/serp/invoke',    pr:'0.01 USDC', d:'SERP to JSON', host:'parse-agent-production.up.railway.app'},
-     {p:'/entrypoints/entity/invoke',  pr:'0.01 USDC', d:'text to entities', host:'parse-agent-production.up.railway.app'}
-   ]}
-];
-
-// ── STATE ────────────────────────────────────────────
-let xgateList    = [];   // full agent list (OUR + xgate, deduplicated)
-let xgateById    = {};   // id -> agent object
-let filteredList = [];
-let feedFbsAll   = [];   // all loaded feedbacks (newest first, max 300)
-let seenIds      = new Set();
-let countdown    = 15;
-let selectedId   = null;
-let activeChain     = null;
-let healthData      = {};
-let healthLoaded    = false;
-let searchTimer     = null;
-let semanticIds     = new Set();
-let graphLoaded     = false;
-
-// ── UTILS ────────────────────────────────────────────
-const PAL = ['#1a5fa8','#2980d9','#1e3a6e','#27ae60','#8e44ad','#16a085','#c0392b','#d35400','#2c3e50','#7f8c8d'];
-function color(s) {
-  var h = 0;
-  for (var i = 0; i < (s||'?').length; i++) h = (h*31 + (s||'?').charCodeAt(i)) & 0xffff;
-  return PAL[h % PAL.length];
-}
-function ini(s) {
-  if (!s) return '?';
-  var w = s.trim().split(/\s+/);
-  return (w.length >= 2 ? w[0][0] + w[1][0] : s.slice(0,2)).toUpperCase();
-}
-function chainName(id) {
-  var m = {8453:'Base', 1:'Ethereum', 137:'Polygon', 100:'Gnosis', 56:'BSC'};
-  return m[id] || ('Chain ' + id);
-}
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function ago(ts) {
-  if (!ts) return '';
-  var d = (Date.now() - new Date(ts).getTime()) / 1000;
-  if (d < 60)    return Math.floor(d) + 's ago';
-  if (d < 3600)  return Math.floor(d/60) + 'm ago';
-  if (d < 86400) return Math.floor(d/3600) + 'h ago';
-  return Math.floor(d/86400) + 'd ago';
-}
-
-// ── HTTP ─────────────────────────────────────────────
-GET._c = {};
-async function GET(url, ttl) {
-  if (ttl > 0 && GET._c[url] && Date.now() - GET._c[url].t < ttl) return GET._c[url].d;
-  try {
-    var r = await fetch(url, {signal: AbortSignal.timeout(10000), cache: 'no-store'});
-    if (!r.ok) throw new Error(r.status);
-    var d = await r.json();
-    if (ttl > 0) GET._c[url] = {d: d, t: Date.now()};
-    return d;
-  } catch(e) { console.warn('GET failed:', url, e.message); return null; }
-}
-
-// Build an endpoint object from a full URL (xgate service rows store the
-// x402 resource URL as the agent id). Returns null for non-URLs.
-function endpointFromUrl(url, desc) {
-  try {
-    var u = new URL(url);
-    return { url: url, host: u.host, p: (u.pathname || '/') + (u.search || ''), pr: '', d: (desc || '').trim() };
-  } catch (e) { return null; }
-}
-// Full URL for an endpoint object (prefers stored url, falls back to host+path).
-function epUrl(e) { return e.url || ('https://' + e.host + (e.p || '')); }
-
-// ── BUILD XGATE AGENT LIST ───────────────────────────
-function buildXgateList(data) {
-  var list = OUR.map(function(a) { return Object.assign({}, a); });
-  var seenIds = {};
-  OUR.forEach(function(a) { seenIds[a.id] = true; xgateById[a.id] = a; });
-
-  for (var i = 0; i < data.length; i++) {
-    var row = data[i];
-    var id = String(row[0]), chainId = row[1], name = row[2], desc = row[3], rep = row[4], rank = row[5];
-    if (seenIds[id]) continue;
-    seenIds[id] = true;
-    var agent = {id: id, chainId: chainId, chain: chainName(chainId),
-                 name: name, desc: desc, rep: rep, rank: rank,
-                 endpoints: [], isOurs: false};
-    // xgate service rows use the x402 resource URL as their id → derive endpoint
-    if (id.indexOf('http') === 0) {
-      var ep = endpointFromUrl(id, desc);
-      if (ep) agent.endpoints = [ep];
-    }
-    list.push(agent);
-    xgateById[id] = agent;
-  }
-
-  xgateList = list;
-  filteredList = list;
-  document.getElementById('ag-count').textContent = '(' + list.length + ')';
-  document.getElementById('st-agents').textContent = list.length;
-  renderList(list);
-}
-
-// ── RENDER AGENT LIST ────────────────────────────────
-function renderList(list) {
-  var wrap = document.getElementById('agent-list');
-  if (!list.length) { wrap.innerHTML = '<div class="empty" style="padding:20px">No agents</div>'; return; }
-  var html = '';
-  for (var i = 0; i < list.length; i++) {
-    var a = list[i];
-    var sc = a.rep || 0;
-    var cls = sc >= 80 ? 'g' : (sc >= 50 ? 'b' : 'gr');
-    var col = color(a.name);
-    var sel = selectedId === a.id ? ' sel' : '';
-    var chain = a.chain || chainName(a.chainId);
-    // healthLoaded: once health.json is fetched, all agents get a dot
-    // (unknown/gray for numeric agents without a health URL)
-    var hs = healthData[a.id] || (healthLoaded ? 'unknown' : null);
-    var dot = hs ? '<span class="upd upd-' + (hs==='online'?'online':hs==='offline'?'offline':'unknown') + '" title="' + hs + '"></span>' : '';
-    html += '<div class="ali' + sel + '" onclick="openDetail(\'' + esc(a.id) + '\')">' +
-      '<div class="av" style="background:' + col + '">' + ini(a.name) + '</div>' +
-      '<div style="flex:1;min-width:0">' +
-        '<div class="an">' + esc(a.name) + '</div>' +
-        '<div class="am">' + chain + ' · #' + a.id + '</div>' +
-      '</div>' +
-      '<div class="asc ' + cls + '">' + sc + '</div>' +
-      dot +
-    '</div>';
-  }
-  wrap.innerHTML = html;
-}
-
-function chainFilter(chainId) {
-  activeChain = chainId;
-  document.querySelectorAll('.cf-btn').forEach(function(b) {
-    b.classList.toggle('active', String(b.dataset.chain||'') === String(chainId===null?'':chainId));
-  });
-  applyFilters(document.querySelector('.al-search').value);
-}
-
-function applyFilters(q) {
-  var base = activeChain === null ? xgateList : xgateList.filter(function(a) {
-    return a.chainId === activeChain;
-  });
-  var qNorm = (q||'').toLowerCase().trim();
-  // semantic results bypass the name filter so they always show when query is active
-  filteredList = qNorm ? base.filter(function(a) {
-    return semanticIds.has(a.id) ||
-           a.name.toLowerCase().indexOf(qNorm) !== -1 ||
-           String(a.id).indexOf(qNorm) !== -1;
-  }) : base;
-  renderList(filteredList);
-}
-
-function filterList(q) {
-  clearTimeout(searchTimer);
-  if (!q.trim()) semanticIds.clear();
-  applyFilters(q);
-  if (!q.trim()) return;
-  searchTimer = setTimeout(function() { doSemanticSearch(q.trim()); }, 500);
-}
-
-async function doSemanticSearch(q) {
-  var inp = document.querySelector('.al-search');
-  if (inp.value.trim().toLowerCase() !== q.toLowerCase()) return;
-  inp.placeholder = 'Searching…';
-  var raw = await GET('https://8004scan.io/api/v1/public/agents/search?q=' + encodeURIComponent(q), 0);
-  inp.placeholder = 'search…';
-  if (!raw) return;
-  var results = raw.data || raw.results || raw.agents || [];
-
-  // build name→id map for dedup across different ID schemes (xgate vs 8004scan)
-  var nameMap = {};
-  xgateList.forEach(function(a) { nameMap[a.name.toLowerCase()] = a.id; });
-
-  results.forEach(function(r) {
-    var id   = String(r.id || r.agentId || r.agent_id || '');
-    var name = String(r.name || '');
-    if (!id) return;
-
-    // if same agent already in list (by name), just tag it as semantic
-    var existingId = nameMap[name.toLowerCase()];
-    if (existingId) { semanticIds.add(existingId); return; }
-
-    // new agent from 8004scan — add it
-    semanticIds.add(id);
-    if (xgateById[id]) return;
-    var cid = r.chain_id || r.chainId || 0;
-    var agent = {id:id, chainId:cid, chain:chainName(cid),
-                 name:name || ('Agent ' + id.slice(0,8)),
-                 desc:r.description || r.desc || '',
-                 rep:r.average_score || r.reputationScore || r.score || 0,
-                 rank:r.rank || r.rankScore || 0, endpoints:[]};
-    xgateList.push(agent); xgateById[id] = agent;
-    nameMap[name.toLowerCase()] = id;
-  });
-
-  applyFilters(inp.value); // always re-render; semanticIds updated above
-}
-
-// ── RENDER FEED CARD ─────────────────────────────────
-function renderFeedCard(fb, isNew) {
-  var name = (fb.agent && fb.agent.name) ? fb.agent.name : ('Agent ' + (fb.agent_id || '').slice(0,8));
-  var col = color(name);
-  var sc = fb.score || 0;
-  var scCls = sc >= 80 ? 'tg' : (sc >= 50 ? 'tb' : '');
-  var host = '';
-  if (fb.endpoint) { try { host = new URL(fb.endpoint).hostname; } catch(e) { host = fb.endpoint; } }
-  var tx = fb.transaction_hash || '';
-  var txS = tx ? tx.slice(0,8) + '...' + tx.slice(-6) : '';
-  var base = fb.chain_id === 8453 ? 'https://basescan.org/tx/' : 'https://etherscan.io/tx/';
-  var user = fb.user_address ? fb.user_address.slice(0,6) + '...' + fb.user_address.slice(-4) : '';
-  var chain = fb.chain_id === 8453 ? 'Base' : (fb.chain_id ? 'Chain ' + fb.chain_id : '');
-  var t = ago(fb.submitted_at || fb.created_at);
-  var agId = fb.agent_id || '';
-
-  var div = document.createElement('div');
-  div.className = 'fc' + (isNew ? ' fc-new' : '');
-  div.onclick = function() { openDetailByFeedAgent(agId, name, fb.chain_id); };
-  div.innerHTML =
-    '<div class="fc-top">' +
-      '<div class="av" style="background:' + col + ';width:32px;height:32px;font-size:11px;flex-shrink:0;">' + ini(name) + '</div>' +
-      '<div class="fc-body">' +
-        '<div class="fc-name">' + esc(name) + '</div>' +
-        (host ? '<div class="fc-ep">' + esc(host) + '</div>' : '') +
-        '<div class="fc-tags">' +
-          '<span class="tag ' + scCls + '">score ' + sc + '</span>' +
-          (fb.tag1 ? '<span class="tag">' + esc(fb.tag1) + '</span>' : '') +
-          (fb.tag2 ? '<span class="tag">' + esc(fb.tag2) + '</span>' : '') +
-          (chain ? '<span class="tag">' + chain + '</span>' : '') +
-        '</div>' +
-        '<div class="fc-foot">' +
-          (user ? '<span>from <b style="color:var(--navy)">' + user + '</b></span>' : '') +
-          (tx ? '<a href="' + base + tx + '" target="_blank" onclick="event.stopPropagation()">' + txS + '</a>' : '') +
-          '<span style="margin-left:auto">' + t + '</span>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
-  return div;
-}
-
-function prependCards(fbs) {
-  var feed = document.getElementById('feed');
-  var init = document.getElementById('feed-init');
-  if (init) init.remove();
-  var reversed = fbs.slice().reverse();
-  for (var i = 0; i < reversed.length; i++) {
-    feed.insertBefore(renderFeedCard(reversed[i], true), feed.firstChild);
-  }
-  while (feed.children.length > 100) feed.removeChild(feed.lastChild);
-}
-
-// ── ENDPOINTS (right panel) ──────────────────────────
-function renderEndpoints(a) {
-  var wrap = document.getElementById('rp-eps-wrap');
-  var box  = document.getElementById('rp-eps');
-  var note = document.getElementById('rp-eps-note');
-  var eps  = (a && a.endpoints) || [];
-  if (!eps.length) { wrap.style.display = 'none'; box.innerHTML = ''; note.textContent = ''; return; }
-  note.textContent = '(' + eps.length + ')';
-  var html = '';
-  for (var i = 0; i < eps.length; i++) {
-    var e = eps[i], url = epUrl(e);
-    html += '<div class="ep-row">' +
-      '<div style="flex:1;min-width:0;">' +
-        '<div class="ep-path" title="' + esc(url) + '">' + esc(url) + '</div>' +
-        (e.d ? '<div style="font-size:8px;color:var(--muted);">' + esc(e.d) + '</div>' : '') +
-      '</div>' +
-      (e.pr ? '<span class="ep-price">' + esc(e.pr) + '</span>' : '') +
-      '<button class="cp" data-url="' + esc(url) + '" onclick="cp(this, this.dataset.url)">copy</button>' +
-    '</div>';
-  }
-  box.innerHTML = html;
-  wrap.style.display = '';
-}
-
-// Best-effort: enrich an agent's endpoint(s) with price/description from the
-// xgate service-detail API (GET /services/{id}). Needs the CORS proxy, so it
-// no-ops silently when PROXY_URL is unset or the request fails.
-async function enrichEndpoints(a) {
-  if (!a || a.isOurs || a._enriched) return;
-  if (!PROXY_URL) return;                                   // detail API has no CORS
-  if (String(a.id).indexOf('http') !== 0) return;           // only service (URL-id) rows
-  a._enriched = true;
-  try {
-    var detailUrl = 'https://api.xgate.run/services/' + encodeURIComponent(a.id);
-    var via = PROXY_URL.replace(/\/+$/, '') + '/?target=' + encodeURIComponent(detailUrl);
-    var r = await fetch(via, { signal: AbortSignal.timeout(10000) });
-    if (!r.ok) return;
-    var d = await r.json();
-    var acc = (d.accepts && d.accepts[0]) || {};
-    var amt = acc.maxAmountRequired || d.maxAmountRequired;
-    var pr  = amt ? (Number(amt) / 1e6) + ' USDC' : '';
-    var resource = d.resource || d.id || a.id;
-    var ep = endpointFromUrl(resource, acc.description || a.desc);
-    if (ep) { ep.pr = pr; a.endpoints = [ep]; }
-    if (selectedId === a.id) renderEndpoints(a);             // re-render if still open
-  } catch (e) { /* proxy down / not found — keep URL-derived endpoint */ }
-}
-
-// ── DETAIL PANEL ─────────────────────────────────────
-function showDetailPanel(a, fbs) {
-  var col = color(a.name);
-  document.getElementById('rp-av').textContent = ini(a.name);
-  document.getElementById('rp-av').style.background = col;
-  document.getElementById('rp-name').textContent = a.name;
-  document.getElementById('rp-desc').textContent = '';
-  var aboutEl = document.getElementById('rp-about');
-  var aboutWrap = document.getElementById('rp-about-wrap');
-  if (a.desc && a.desc.trim()) {
-    aboutEl.textContent = a.desc.trim();
-    aboutWrap.style.display = '';
-  } else {
-    aboutWrap.style.display = 'none';
-  }
-  document.getElementById('rp-chain').textContent = (a.chain || chainName(a.chainId)) + (a.chainId ? ' (' + a.chainId + ')' : '');
-  document.getElementById('rp-score').textContent = a.rep ? (a.rep + '/100') : '—';
-  document.getElementById('rp-fbc').textContent   = a.rank || '—';
-  document.getElementById('rp-last').textContent  = a.isOurs ? 'xgate.run (our agent)' : 'xgate.run marketplace';
-
-  var inv = document.getElementById('rp-inv');
-  if (a.endpoints && a.endpoints.length) {
-    inv.href = epUrl(a.endpoints[0]);
-    inv.style.display = '';
-  } else { inv.style.display = 'none'; }
-
-  // Endpoints section — list every endpoint with URL + copy button
-  renderEndpoints(a);
-
-  // "Test Agent" (x402 pay) — shown for every agent. Requests route through the
-  // CORS proxy (PROXY_URL), so any x402 endpoint is testable. Agents without a
-  // known endpoint just open the modal with an empty URL field to fill in.
-  document.getElementById('rp-test').style.display = '';
-
-  var el = document.getElementById('rp-fbs');
-  if (fbs && fbs.length) {
-    var html = '';
-    for (var i = 0; i < Math.min(fbs.length, 15); i++) {
-      var fb = fbs[i];
-      var sc = fb.score || 0;
-      var sc_col = sc >= 80 ? '#27ae60' : (sc >= 50 ? 'var(--accent)' : 'var(--muted)');
-      var tx = fb.transaction_hash || '';
-      var base = fb.chain_id === 8453 ? 'https://basescan.org/tx/' : 'https://etherscan.io/tx/';
-      var user = fb.user_address ? fb.user_address.slice(0,6) + '...' + fb.user_address.slice(-4) : '?';
-      html += '<div class="rxi">' +
-        '<div style="display:flex;justify-content:space-between">' +
-          '<b style="color:' + sc_col + ';font-family:monospace">score ' + sc + '</b>' +
-          '<span style="color:var(--muted)">' + ago(fb.submitted_at || fb.created_at) + '</span>' +
-        '</div>' +
-        '<div style="color:var(--muted);margin-top:2px">from <b style="color:var(--navy)">' + user + '</b></div>' +
-        (fb.tag1 ? '<div style="color:var(--muted);margin-top:1px">' + esc(fb.tag1) + (fb.tag2 ? ' · ' + esc(fb.tag2) : '') + '</div>' : '') +
-        (tx ? '<div><a href="' + base + tx + '" target="_blank" style="color:var(--accent);font-family:monospace;font-size:9px">' + tx.slice(0,12) + '...</a></div>' : '') +
-      '</div>';
-    }
-    el.innerHTML = html;
-  } else {
-    el.innerHTML = '<div style="color:var(--muted);font-size:10px;padding:4px 0">No recent activity in current batch.<br>Chain: ' + (a.chain || chainName(a.chainId)) + '</div>';
-  }
-
-  document.getElementById('right').classList.add('open');
-  renderList(filteredList);
-  if (window.innerWidth <= 768) closeMobileLeft();
-}
-
-function openDetail(agentId) {
-  selectedId = agentId;
-  var a = xgateById[agentId];
-  if (!a) return;
-  var nameLower = a.name.toLowerCase();
-  var matching = feedFbsAll.filter(function(fb) {
-    return ((fb.agent && fb.agent.name) || '').toLowerCase() === nameLower;
-  });
-  showDetailPanel(a, matching);
-  enrichEndpoints(a);   // best-effort price/desc from xgate detail API (via proxy)
-}
-
-function openDetailByFeedAgent(agentId, name, chainId) {
-  var xg = null;
-  var nameLower = name.toLowerCase();
-  for (var i = 0; i < xgateList.length; i++) {
-    if (xgateList[i].name.toLowerCase() === nameLower) { xg = xgateList[i]; break; }
-  }
-  if (xg) { selectedId = xg.id; openDetail(xg.id); return; }
-  selectedId = agentId;
-  var a = {id: agentId, name: name, chainId: chainId, chain: chainName(chainId),
-           desc: 'Active in feed (not in xgate marketplace)', rep: 0, rank: 0, endpoints: []};
-  var matching = feedFbsAll.filter(function(fb) {
-    return fb.agent_id === agentId || ((fb.agent && fb.agent.name) || '').toLowerCase() === nameLower;
-  });
-  showDetailPanel(a, matching);
-}
-
-function closeDetail() {
-  selectedId = null;
-  document.getElementById('right').classList.remove('open');
-  renderList(filteredList);
-}
-
-async function fetchEcosystemStats() {
-  // api.xgate.run has no CORS headers → load pre-fetched stats.json (written by GH Actions)
-  try {
-    var r = await fetch('public/data/stats.json', {cache: 'no-store'});
-    if (!r.ok) return;
-    var raw = await r.json();
-    var agents    = raw.totalAgents    ? Number(raw.totalAgents).toLocaleString()    : '—';
-    var resources = raw.totalResources ? Number(raw.totalResources).toLocaleString() : '—';
-    document.getElementById('st-ecosystem').textContent =
-      agents + ' agents · ' + resources + ' services in ecosystem';
-  } catch(e) { /* stats.json not yet available */ }
-}
-
-// ── MOBILE NAV ────────────────────────────────────────
-function toggleMobileLeft() {
-  var left = document.getElementById('left');
-  var bd   = document.getElementById('backdrop');
-  var btn  = document.getElementById('mob-menu');
-  var open = left.classList.contains('mob-open');
-  left.classList.toggle('mob-open', !open);
-  bd.classList.toggle('show', !open);
-  btn.textContent = open ? '☰' : '✕';
-  btn.classList.toggle('active', !open);
-}
-function closeMobileLeft() {
-  document.getElementById('left').classList.remove('mob-open');
-  document.getElementById('backdrop').classList.remove('show');
-  var btn = document.getElementById('mob-menu');
-  btn.textContent = '☰';
-  btn.classList.remove('active');
-}
-
-// ── GRAPH VIEW ────────────────────────────────────────
-function loadScript(src) {
-  return new Promise(function(resolve, reject) {
-    if (document.querySelector('script[src="' + src + '"]')) { resolve(); return; }
-    var s = document.createElement('script');
-    s.src = src; s.onload = resolve; s.onerror = reject;
-    document.head.appendChild(s);
-  });
-}
-
-async function toggleGraph() {
-  var btn     = document.getElementById('graph-btn');
-  var feedEl  = document.getElementById('feed');
-  var graphEl = document.getElementById('graph-view');
-  var titleEl = document.getElementById('feed-hdr-title');
-  var refEl   = document.getElementById('ref-info');
-
-  if (graphEl.classList.contains('active')) {
-    graphEl.classList.remove('active');
-    feedEl.style.display = '';
-    btn.classList.remove('active');
-    btn.textContent = '◈ Graph';
-    titleEl.textContent = 'Live Activity';
-    refEl.style.display = '';
-    var mobG = document.getElementById('mob-graph-btn');
-    if (mobG) { mobG.classList.remove('active'); mobG.textContent = '◈'; }
-    return;
-  }
-
-  feedEl.style.display = 'none';
-  graphEl.classList.add('active');
-  btn.classList.add('active');
-  btn.textContent = '✕ Feed';
-  titleEl.textContent = 'Network Graph';
-  refEl.style.display = 'none';
-  var mobG = document.getElementById('mob-graph-btn');
-  if (mobG) { mobG.classList.add('active'); mobG.textContent = '✕'; }
-
-  if (!graphLoaded) await initGraph();
-}
-
-async function initGraph() {
-  var wrap = document.getElementById('sigma-wrap');
-  wrap.innerHTML = '<div class="empty">Loading D3…</div>';
-  try {
-    await loadScript('https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js');
-
-    wrap.innerHTML = '<div class="empty">Fetching graph data…</div>';
-    var r = await fetch('public/data/graph.json', {cache: 'no-store'});
-    if (!r.ok) throw new Error('graph.json not found');
-    var gd = await r.json();
-
-    if (!gd.nodes || !gd.nodes.length) {
-      wrap.innerHTML = '<div class="empty">No graph data yet — check back later</div>';
-      return;
-    }
-
-    renderD3Graph(gd);
-    graphLoaded = true;
-  } catch(e) {
-    wrap.innerHTML = '<div class="empty">Graph error: ' + esc(e.message) + '</div>';
-  }
-}
-
-function renderD3Graph(gd) {
-  var wrap = document.getElementById('sigma-wrap');
-  wrap.innerHTML = '';
-
-  var W = wrap.clientWidth  || 800;
-  var H = wrap.clientHeight || 600;
-
-  var svg = d3.select(wrap).append('svg')
-    .attr('width','100%').attr('height','100%')
-    .style('background','var(--bg)');
-
-  var g = svg.append('g');
-  svg.call(d3.zoom().scaleExtent([0.2, 6]).on('zoom', function(e) { g.attr('transform', e.transform); }));
-
-  var nodeMap = {};
-  var nodes = gd.nodes.map(function(n) { var o = Object.assign({}, n); nodeMap[n.id] = o; return o; });
-  var links = gd.edges
-    .filter(function(e) { return nodeMap[e.from] && nodeMap[e.to]; })
-    .map(function(e) { return {source: e.from, target: e.to, weight: e.weight}; });
-
-  var sim = d3.forceSimulation(nodes)
-    .force('link',  d3.forceLink(links).id(function(d){return d.id;}).distance(70).strength(0.4))
-    .force('charge',d3.forceManyBody().strength(-150))
-    .force('center',d3.forceCenter(W/2, H/2))
-    .force('collide',d3.forceCollide().radius(function(d){return d.size+5;}));
-
-  var link = g.selectAll('line').data(links).enter().append('line')
-    .attr('stroke','#b8d4ef')
-    .attr('stroke-opacity',0.8)
-    .attr('stroke-width',function(d){return Math.max(1,Math.min(4,d.weight));});
-
-  var node = g.selectAll('g.gn').data(nodes).enter().append('g').attr('class','gn')
-    .style('cursor','pointer')
-    .call(d3.drag()
-      .on('start',function(e,d){if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
-      .on('drag', function(e,d){d.fx=e.x;d.fy=e.y;})
-      .on('end',  function(e,d){if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;}));
-
-  node.append('circle')
-    .attr('r',function(d){return d.size;})
-    .attr('fill',function(d){
-      return d.isOurs    ? '#1a3a6e'
-           : d.chainId===8453 ? '#2980d9'
-           : d.chainId===100  ? '#8e44ad'
-           : '#16a085';
-    })
-    .attr('stroke','#fff').attr('stroke-width',1.5)
-    .on('mouseover',function(e,d){
-      var el=document.getElementById('graph-info');
-      el.innerHTML='<b>'+esc(d.name)+'</b><br>'+chainName(d.chainId)+' · rep '+d.rep+(d.feedbacks?' · '+d.feedbacks+' feedbacks':'');
-      el.style.display='';
-    })
-    .on('mouseout',function(){document.getElementById('graph-info').style.display='none';})
-    .on('click',function(e,d){
-      var id=d.id;
-      if(xgateById[id]){selectedId=id;openDetail(id);return;}
-      selectedId=id;
-      showDetailPanel({id:id,name:d.name,chainId:d.chainId,chain:chainName(d.chainId),
-        desc:'',rep:d.rep,rank:0,endpoints:[]},
-        feedFbsAll.filter(function(fb){return fb.agent_id===id;}));
-    });
-
-  node.filter(function(d){return d.size>=10;}).append('text')
-    .attr('text-anchor','middle').attr('dy',function(d){return d.size+11;})
-    .attr('fill','var(--text)').attr('font-size','9px')
-    .attr('font-family','-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif')
-    .attr('pointer-events','none')
-    .text(function(d){return d.name.length>15?d.name.slice(0,13)+'…':d.name;});
-
-  sim.on('tick',function(){
-    link.attr('x1',function(d){return d.source.x;}).attr('y1',function(d){return d.source.y;})
-        .attr('x2',function(d){return d.target.x;}).attr('y2',function(d){return d.target.y;});
-    node.attr('transform',function(d){return 'translate('+d.x+','+d.y+')';});
-  });
-
-  document.getElementById('graph-meta').textContent =
-    gd.nodes.length+' agents · '+gd.edges.length+' connections · '+(gd.generatedAt||'').slice(0,10);
-}
-
+// ── copy-to-clipboard ────────────────────────────────
 function cp(btn, url) {
   navigator.clipboard.writeText(url).then(function() {
     btn.textContent = 'ok!'; btn.classList.add('ok');
@@ -1034,17 +282,9 @@ function cp(btn, url) {
 // ── TEST AGENT MODAL (x402 v2) ───────────────────────
 // The actual payment logic lives in the <script type="module"> below
 // (it needs viem). Here we only handle opening/closing + prefilling.
-// blank=true → open empty (e.g. the sidebar "Test any agent" button), ignoring
-// any selected agent so the user enters endpoint/method/body themselves.
-function openTestModal(blank) {
-  var a = (!blank && selectedId) ? xgateById[selectedId] : null;
-  var ep = '', amt = '';
-  if (a && a.endpoints && a.endpoints.length) {
-    ep  = epUrl(a.endpoints[0]);
-    amt = (a.endpoints[0].pr || '').replace(/[^0-9.]/g, '');
-  }
-  document.getElementById('tm-endpoint').value = ep;
-  document.getElementById('tm-amount').value   = amt || '0.01';
+function openTestModal() {
+  document.getElementById('tm-endpoint').value = '';
+  document.getElementById('tm-amount').value   = '0.01';
   document.getElementById('tm-body').value      = '';
   document.getElementById('tm-method').value    = 'POST';
   onMethodChange();
@@ -1053,7 +293,6 @@ function openTestModal(blank) {
   res.style.display = 'none'; res.textContent = '';
   // MetaMask presence warning
   document.getElementById('tm-warn').classList.toggle('show', typeof window.ethereum === 'undefined');
-  if (window.innerWidth <= 768) closeMobileLeft();   // close the mobile drawer
   document.getElementById('test-modal').classList.add('open');
 }
 // Hide the request-body field for GET (no body is sent).
@@ -1071,73 +310,6 @@ document.getElementById('test-modal').addEventListener('click', function(e) {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeTestModal();
 });
-
-// ── POLL (8004scan, every 15s) ────────────────────────
-async function poll() {
-  var raw = await GET('https://8004scan.io/api/v1/public/feedbacks?limit=100', 0);
-  if (!raw || !raw.data) return;
-  var fbs = raw.data;
-  var total = raw.meta && raw.meta.pagination && raw.meta.pagination.total;
-  if (total) document.getElementById('st-txns').textContent = Number(total).toLocaleString();
-  var newFbs = fbs.filter(function(fb) { return fb.id && !seenIds.has(fb.id); });
-  newFbs.forEach(function(fb) { seenIds.add(fb.id); feedFbsAll.unshift(fb); });
-  if (feedFbsAll.length > 300) feedFbsAll.length = 300;
-  if (newFbs.length) prependCards(newFbs);
-}
-
-// ── COUNTDOWN ────────────────────────────────────────
-function startCountdown() {
-  setInterval(function() {
-    countdown--;
-    document.getElementById('nxt').textContent = countdown + 's';
-    if (countdown <= 0) { countdown = 15; poll(); }
-  }, 1000);
-}
-
-// ── MAIN ─────────────────────────────────────────────
-async function main() {
-  // 1. Load xgate agent list + health data in parallel
-  document.getElementById('agent-list').innerHTML = '<div class="empty" style="padding:20px;">Loading xgate data…</div>';
-  var xgateData = XGATE_DATA_FALLBACK;
-  try {
-    var [xr, hr] = await Promise.all([
-      fetch('public/data/xgate.json'),
-      fetch('public/data/health.json').catch(function() { return {ok:false}; })
-    ]);
-    if (xr.ok) xgateData = await xr.json();
-    else console.warn('xgate.json not found (' + xr.status + '), using fallback');
-    if (hr.ok) { healthData = await hr.json(); healthLoaded = true; }
-  } catch(e) { console.warn('Failed to load data:', e.message); }
-  buildXgateList(xgateData);
-
-  // 2. Load feed — 3 pages in parallel for initial breadth
-  var BASE = 'https://8004scan.io/api/v1/public/feedbacks?limit=100';
-  var results = await Promise.all([
-    GET(BASE + '&page=1', 0),
-    GET(BASE + '&page=2', 0),
-    GET(BASE + '&page=3', 0)
-  ]);
-
-  results.forEach(function(r) {
-    if (!r || !r.data) return;
-    r.data.forEach(function(fb) {
-      if (fb.id && !seenIds.has(fb.id)) { seenIds.add(fb.id); feedFbsAll.push(fb); }
-    });
-  });
-
-  if (feedFbsAll.length) {
-    if (results[0] && results[0].data) prependCards(results[0].data);
-    var total = results[0] && results[0].meta && results[0].meta.pagination && results[0].meta.pagination.total;
-    if (total) document.getElementById('st-txns').textContent = Number(total).toLocaleString();
-  } else {
-    document.getElementById('feed').innerHTML = '<div class="empty">Feed unavailable — check console for errors</div>';
-  }
-
-  startCountdown();
-  fetchEcosystemStats();
-}
-
-main();
 </script>
 
 <!-- ───────────────────────────────────────────────────── -->
