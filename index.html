@@ -1117,11 +1117,15 @@ async function x402Pay(opts) {
   if (!pr) { try { pr = await res.clone().json(); } catch (e) {} }
   if (!pr) pr = {};
 
-  var accept  = (pr.accepts && pr.accepts[0]) || pr;
-  var network = accept.network || 'eip155:8453';
-  var asset   = accept.asset || USDC_BASE;
-  var payTo   = accept.payTo || accept.pay_to || accept.payto;
-  var amount  = String(accept.maxAmountRequired || accept.amount || toUnits(opts.amountUsdc));
+  var accept   = (pr.accepts && pr.accepts[0]) || pr;
+  var scheme   = accept.scheme || 'exact';
+  var network  = accept.network || 'eip155:8453';
+  var asset    = accept.asset || USDC_BASE;
+  var payTo    = accept.payTo || accept.pay_to || accept.payto;
+  var amount   = String(accept.amount || accept.maxAmountRequired || toUnits(opts.amountUsdc));
+  var timeout  = Number(accept.maxTimeoutSeconds || 300);
+  var extra    = accept.extra || { name: 'USD Coin', version: '2' }; // EIP-712 domain (name+version)
+  var chainId  = parseInt(String(network).split(':')[1] || '8453', 10);
   if (!payTo) throw new Error('PAYMENT-REQUIRED did not include a payTo address (and CORS may be hiding the header)');
   tmLog('  required: <b>' + (Number(amount) / 1e6) + ' USDC</b> → ' + payTo.slice(0, 6) + '…' + payTo.slice(-4));
 
@@ -1134,39 +1138,53 @@ async function x402Pay(opts) {
   try { await wc.switchChain({ id: 8453 }); }
   catch (e) { tmLog('  (could not switch to Base: ' + (e.shortMessage || e.message) + ')'); }
 
-  // sign EIP-3009 authorization
+  // sign EIP-3009 TransferWithAuthorization (same window the x402 client uses:
+  // validAfter = now-600, validBefore = now + maxTimeoutSeconds)
   tmLog('→ Signing payment authorization…');
-  var validAfter  = Math.floor(Date.now() / 1000) - 60;   // small backdate for clock skew
-  var validBefore = validAfter + 3660;                    // ~1h validity
-  var nonce = toHex(crypto.getRandomValues(new Uint8Array(32)));
+  var now = Math.floor(Date.now() / 1000);
+  var authorization = {
+    from: account,
+    to: payTo,
+    value: amount,                          // string, must equal accepted.amount
+    validAfter: String(now - 600),
+    validBefore: String(now + timeout),
+    nonce: toHex(crypto.getRandomValues(new Uint8Array(32)))
+  };
   var signature = await wc.signTypedData({
     account: account,
-    domain: { name: 'USD Coin', version: '2', chainId: 8453, verifyingContract: asset },
+    domain: { name: extra.name, version: extra.version, chainId: chainId, verifyingContract: asset },
     types: TWA_TYPES,
     primaryType: 'TransferWithAuthorization',
     message: {
-      from: account,
-      to: payTo,
-      value: BigInt(amount),
-      validAfter: BigInt(validAfter),
-      validBefore: BigInt(validBefore),
-      nonce: nonce
+      from: authorization.from,
+      to: authorization.to,
+      value: BigInt(authorization.value),
+      validAfter: BigInt(authorization.validAfter),
+      validBefore: BigInt(authorization.validBefore),
+      nonce: authorization.nonce
     }
   });
   tmLog('  signed ✓', 'ok');
 
-  // (d) retry with PAYMENT-SIGNATURE header (Base64 JSON)
+  // (d) retry with PAYMENT-SIGNATURE header — x402 v2 payload shape:
+  //   { x402Version:2, accepted:<requirements>, payload:{ authorization, signature } }
+  // The server reads paymentPayload.accepted as the requirements and verifies
+  // the nested authorization/signature against it.
   var payload = {
     x402Version: 2,
-    scheme: 'exact',
-    network: network,
-    asset: asset,
-    amount: amount,
-    payTo: payTo,
-    nonce: nonce,
-    validAfter: validAfter,
-    validBefore: validBefore,
-    signature: signature
+    accepted: {
+      scheme: scheme,
+      network: network,
+      amount: amount,
+      asset: asset,
+      payTo: payTo,
+      maxTimeoutSeconds: timeout,
+      extra: extra
+    },
+    payload: {
+      authorization: authorization,
+      signature: signature
+    }
   };
   var sigHeader = btoa(JSON.stringify(payload));
 
