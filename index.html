@@ -1046,6 +1046,19 @@ import { base } from 'https://esm.sh/viem@2.x/chains';
 
 const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'; // USDC on Base mainnet
 
+// Cloudflare Worker CORS proxy (see workers/x402-proxy/). Fill in after deploy:
+//   const PROXY_URL = 'https://x402-proxy.YOUR_SUBDOMAIN.workers.dev';
+// When empty, requests go direct (works for our own CORS-enabled agents).
+// When set, every request is routed through the proxy so ANY x402 endpoint
+// becomes testable from the browser, even ones without CORS headers.
+const PROXY_URL = '';
+
+// Wrap an endpoint URL through the proxy when PROXY_URL is configured.
+function proxied(endpoint) {
+  if (!PROXY_URL) return endpoint;
+  return PROXY_URL.replace(/\/+$/, '') + '/?target=' + encodeURIComponent(endpoint);
+}
+
 // ── logging into the modal ───────────────────────────
 function tmLog(msg, cls) {
   var box = document.getElementById('tm-log');
@@ -1091,11 +1104,14 @@ async function x402Pay(opts) {
   if (typeof window.ethereum === 'undefined') throw new Error('MetaMask required');
 
   var endpoint = opts.endpoint;
+  var reqUrl   = proxied(endpoint);   // route through CORS proxy when configured
   var body     = opts.body || {};
+
+  if (PROXY_URL) tmLog('  via CORS proxy', 'ok');
 
   // (a) initial request — no payment
   tmLog('→ Requesting endpoint (no payment)…');
-  var res = await fetch(endpoint, {
+  var res = await fetch(reqUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
@@ -1189,7 +1205,7 @@ async function x402Pay(opts) {
   var sigHeader = btoa(JSON.stringify(payload));
 
   tmLog('→ Sending payment & retrying…');
-  var res2 = await fetch(endpoint, {
+  var res2 = await fetch(reqUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'PAYMENT-SIGNATURE': sigHeader },
     body: JSON.stringify(body)
