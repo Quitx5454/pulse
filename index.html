@@ -1228,8 +1228,11 @@ document.getElementById('tm-pay').addEventListener('click', async function () {
   btn.disabled = true; btn.textContent = 'Processing…';
   try {
     var result = await x402Pay({ endpoint: endpoint, amountUsdc: amount, body: body });
-    resEl.style.display = '';
-    resEl.textContent = (typeof result === 'string') ? result : JSON.stringify(result, null, 2);
+    var pretty = (typeof result === 'string') ? result : JSON.stringify(result, null, 2);
+    if (pretty === undefined || pretty === '' || pretty === 'null') pretty = '(empty response body)';
+    tmLog('  response body ↓', 'ok');
+    resEl.textContent = pretty;
+    resEl.style.display = 'block';   // override the stylesheet's display:none
   } catch (e) {
     tmLog('✗ ' + (e.shortMessage || e.message || String(e)), 'err');
   } finally {
