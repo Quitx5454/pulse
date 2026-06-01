@@ -218,6 +218,12 @@ body::before{
   font-family:monospace;width:calc(100% - 28px);
 }
 .test-btn:hover{background:#0f2547;}
+.side-test-btn{
+  display:block;width:100%;margin-top:6px;padding:7px;
+  background:var(--accent);color:#fff;border:none;border-radius:2px;
+  font-size:11px;font-weight:700;cursor:pointer;font-family:monospace;
+}
+.side-test-btn:hover{background:var(--navy);}
 #test-modal{
   display:none;position:fixed;inset:0;z-index:200;
   align-items:center;justify-content:center;
@@ -319,6 +325,7 @@ textarea.tm-in{resize:vertical;min-height:46px;}
         <button class="cp" onclick="cp(this,'https://parse-agent-production.up.railway.app/entrypoints/entity/invoke')">copy</button>
       </div>
     </div>
+    <button class="side-test-btn" onclick="openTestModal(true)">⚡ Test any agent</button>
   </div>
   <div class="sec" style="padding-bottom:4px;">
     <div class="sec-title">Agents <span id="ag-count" style="font-weight:400"></span></div>
@@ -1027,8 +1034,10 @@ function cp(btn, url) {
 // ── TEST AGENT MODAL (x402 v2) ───────────────────────
 // The actual payment logic lives in the <script type="module"> below
 // (it needs viem). Here we only handle opening/closing + prefilling.
-function openTestModal() {
-  var a = selectedId ? xgateById[selectedId] : null;
+// blank=true → open empty (e.g. the sidebar "Test any agent" button), ignoring
+// any selected agent so the user enters endpoint/method/body themselves.
+function openTestModal(blank) {
+  var a = (!blank && selectedId) ? xgateById[selectedId] : null;
   var ep = '', amt = '';
   if (a && a.endpoints && a.endpoints.length) {
     ep  = epUrl(a.endpoints[0]);
@@ -1044,6 +1053,7 @@ function openTestModal() {
   res.style.display = 'none'; res.textContent = '';
   // MetaMask presence warning
   document.getElementById('tm-warn').classList.toggle('show', typeof window.ethereum === 'undefined');
+  if (window.innerWidth <= 768) closeMobileLeft();   // close the mobile drawer
   document.getElementById('test-modal').classList.add('open');
 }
 // Hide the request-body field for GET (no body is sent).
