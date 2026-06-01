@@ -119,8 +119,18 @@ body::before{
 .ld{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:blink 1.4s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
 #ref-info{font-size:10px;color:var(--muted);font-family:monospace;margin-left:auto;}
+#graph-btn{background:none;border:1px solid var(--border);padding:3px 9px;font-size:10px;font-family:monospace;cursor:pointer;color:var(--muted);border-radius:2px;flex-shrink:0;}
+#graph-btn:hover,#graph-btn.active{border-color:var(--accent);color:var(--accent);background:#eff7ff;}
 
 #feed{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:8px;}
+
+/* graph view */
+#graph-view{display:none;flex:1;flex-direction:column;position:relative;}
+#graph-view.active{display:flex;}
+#sigma-wrap{flex:1;width:100%;position:relative;}
+.g-overlay{position:absolute;pointer-events:none;z-index:10;background:var(--panel);border:1px solid var(--border);padding:6px 10px;font-size:10px;font-family:monospace;}
+#graph-info{top:10px;left:10px;display:none;max-width:200px;}
+#graph-meta{bottom:10px;left:10px;color:var(--muted);font-size:9px;}
 .fc{
   background:var(--panel);border:1px solid var(--border);padding:10px 12px;
   cursor:pointer;transition:border-color .1s;
@@ -237,11 +247,17 @@ body::before{
 <!-- CENTER -->
 <div id="center">
   <div id="feed-hdr">
-    <h2>Live Activity</h2>
+    <h2 id="feed-hdr-title">Live Activity</h2>
     <div class="lp"><span class="ld"></span>LIVE</div>
+    <button id="graph-btn" onclick="toggleGraph()">◈ Graph</button>
     <div id="ref-info">refreshes every 15s · next: <span id="nxt">15s</span></div>
   </div>
   <div id="feed"><div class="empty" id="feed-init">Loading…</div></div>
+  <div id="graph-view">
+    <div id="sigma-wrap"><div class="empty">Loading graph…</div></div>
+    <div class="g-overlay" id="graph-info"></div>
+    <div class="g-overlay" id="graph-meta"></div>
+  </div>
 </div>
 
 <!-- RIGHT -->
@@ -317,7 +333,9 @@ let healthData      = {};
 let healthLoaded    = false;
 let searchTimer     = null;
 let semanticIds     = new Set();
-let leaderboardData = []; // top 10 from /leaderboard
+let leaderboardData = [];
+let graphLoaded     = false;
+let sigmaRenderer   = null;
 
 // ── UTILS ────────────────────────────────────────────
 const PAL = ['#1a5fa8','#2980d9','#1e3a6e','#27ae60','#8e44ad','#16a085','#c0392b','#d35400','#2c3e50','#7f8c8d'];
@@ -694,6 +712,136 @@ async function fetchEcosystemStats() {
     document.getElementById('st-ecosystem').textContent =
       agents + ' agents · ' + resources + ' services in ecosystem';
   } catch(e) { /* stats.json not yet available */ }
+}
+
+// ── GRAPH VIEW ────────────────────────────────────────
+function loadScript(src) {
+  return new Promise(function(resolve, reject) {
+    if (document.querySelector('script[src="' + src + '"]')) { resolve(); return; }
+    var s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+async function toggleGraph() {
+  var btn     = document.getElementById('graph-btn');
+  var feedEl  = document.getElementById('feed');
+  var graphEl = document.getElementById('graph-view');
+  var titleEl = document.getElementById('feed-hdr-title');
+  var refEl   = document.getElementById('ref-info');
+
+  if (graphEl.classList.contains('active')) {
+    graphEl.classList.remove('active');
+    feedEl.style.display = '';
+    btn.classList.remove('active');
+    btn.textContent = '◈ Graph';
+    titleEl.textContent = 'Live Activity';
+    refEl.style.display = '';
+    return;
+  }
+
+  feedEl.style.display = 'none';
+  graphEl.classList.add('active');
+  btn.classList.add('active');
+  btn.textContent = '✕ Feed';
+  titleEl.textContent = 'Network Graph';
+  refEl.style.display = 'none';
+
+  if (!graphLoaded) await initGraph();
+}
+
+async function initGraph() {
+  var wrap = document.getElementById('sigma-wrap');
+  wrap.innerHTML = '<div class="empty">Loading libraries…</div>';
+  try {
+    await loadScript('https://cdn.jsdelivr.net/npm/graphology@0.25.4/dist/graphology.umd.min.js');
+    await loadScript('https://cdn.jsdelivr.net/npm/graphology-layout-forceatlas2@0.10.1/dist/graphology-layout-forceatlas2.min.js');
+    await loadScript('https://cdn.jsdelivr.net/npm/sigma@3.0.0/build/sigma.min.js');
+
+    wrap.innerHTML = '<div class="empty">Fetching graph data…</div>';
+    var r = await fetch('public/data/graph.json', {cache: 'no-store'});
+    if (!r.ok) throw new Error('graph.json not found (run GitHub Actions first)');
+    var gd = await r.json();
+
+    if (!gd.nodes || !gd.nodes.length) {
+      wrap.innerHTML = '<div class="empty">No graph data yet — check back later</div>';
+      return;
+    }
+
+    renderSigmaGraph(gd);
+    graphLoaded = true;
+  } catch(e) {
+    wrap.innerHTML = '<div class="empty">Graph error: ' + esc(e.message) + '</div>';
+  }
+}
+
+function renderSigmaGraph(gd) {
+  var wrap = document.getElementById('sigma-wrap');
+  wrap.innerHTML = '';
+
+  // Build graphology graph
+  var GraphClass = (window.graphology && window.graphology.Graph) || window.Graph;
+  var graph = new GraphClass({ multi: false, type: 'undirected' });
+
+  var n = gd.nodes.length;
+  gd.nodes.forEach(function(node, i) {
+    var angle = (2 * Math.PI * i) / n;
+    var radius = 1 + (Math.random() - 0.5) * 0.4;
+    var baseColor = node.isOurs ? '#1a3a6e'
+      : node.chainId === 8453 ? '#2980d9'
+      : node.chainId === 100  ? '#8e44ad'
+      : '#16a085';
+    graph.addNode(node.id, {
+      x: radius * Math.cos(angle),
+      y: radius * Math.sin(angle),
+      size: node.size,
+      label: node.name,
+      color: baseColor,
+    });
+  });
+
+  gd.edges.forEach(function(e) {
+    try {
+      if (graph.hasNode(e.from) && graph.hasNode(e.to) && !graph.hasEdge(e.from, e.to))
+        graph.addEdge(e.from, e.to, {size: Math.max(1, Math.min(4, e.weight)), color: '#b8d4ef'});
+    } catch(_) {}
+  });
+
+  // Force-directed layout
+  if (window.graphologyLayoutForceAtlas2) {
+    window.graphologyLayoutForceAtlas2.assign(graph, {
+      iterations: 150,
+      settings: { gravity: 1, scalingRatio: 6, slowDown: 10, adjustSizes: true },
+    });
+  }
+
+  var SigmaClass = window.Sigma;
+  sigmaRenderer = new SigmaClass(graph, wrap, {
+    renderEdgeLabels: false,
+    labelFont: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+    labelSize: 11,
+    labelColor: {color: '#1a2a3a'},
+    defaultEdgeColor: '#b8d4ef',
+    defaultNodeColor: '#2980d9',
+  });
+
+  // Hover tooltip
+  var infoEl = document.getElementById('graph-info');
+  sigmaRenderer.on('enterNode', function(ev) {
+    var attrs = graph.getNodeAttributes(ev.node);
+    var nd = gd.nodes.find(function(n) { return n.id === ev.node; });
+    infoEl.innerHTML =
+      '<b>' + esc(attrs.label) + '</b><br>' +
+      chainName(nd ? nd.chainId : 0) +
+      ' · rep ' + (nd ? nd.rep : 0) +
+      (nd && nd.feedbacks ? ' · ' + nd.feedbacks + ' feedbacks' : '');
+    infoEl.style.display = '';
+  });
+  sigmaRenderer.on('leaveNode', function() { infoEl.style.display = 'none'; });
+
+  var meta = document.getElementById('graph-meta');
+  meta.textContent = gd.nodes.length + ' agents · ' + gd.edges.length + ' connections · ' + (gd.generatedAt || '').slice(0,10);
 }
 
 function cp(btn, url) {
