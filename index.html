@@ -688,10 +688,10 @@ function showDetailPanel(a, fbs) {
     inv.style.display = '';
   } else { inv.style.display = 'none'; }
 
-  // "Test Agent" (x402 pay) — only for our two testable agents
-  var TESTABLE_HOSTS = ['distill-agent-production.up.railway.app', 'parse-agent-production.up.railway.app'];
-  var canTest = !!(a.endpoints && a.endpoints.some(function(e) { return TESTABLE_HOSTS.indexOf(e.host) !== -1; }));
-  document.getElementById('rp-test').style.display = canTest ? '' : 'none';
+  // "Test Agent" (x402 pay) — shown for every agent. Requests route through the
+  // CORS proxy (PROXY_URL), so any x402 endpoint is testable. Agents without a
+  // known endpoint just open the modal with an empty URL field to fill in.
+  document.getElementById('rp-test').style.display = '';
 
   var el = document.getElementById('rp-fbs');
   if (fbs && fbs.length) {
@@ -1051,7 +1051,7 @@ const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'; // USDC on Base 
 // When empty, requests go direct (works for our own CORS-enabled agents).
 // When set, every request is routed through the proxy so ANY x402 endpoint
 // becomes testable from the browser, even ones without CORS headers.
-const PROXY_URL = '';
+const PROXY_URL = 'https://x402-proxy.pulse-x402.workers.dev';
 
 // Wrap an endpoint URL through the proxy when PROXY_URL is configured.
 function proxied(endpoint) {
