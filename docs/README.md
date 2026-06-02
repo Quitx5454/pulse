@@ -14,6 +14,7 @@ Pay per call in USDC on Base.
 
 | Agent | What it does | Price |
 |-------|-------------|-------|
+| [Pipeline](./pipeline.html) | Chains any combination of the agents in one async call | 0.03 USDC |
 | [Refine](./refine.html) | Strips bot activity from raw on-chain transaction data | 0.02 USDC |
 | [Forge](./forge.html) | Compiles ERC-8004 reputation proofs | 0.02 USDC |
 | [Shield](./shield.html) | Sanitizes x402 payment metadata, strips PII | 0.005 USDC |

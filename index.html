@@ -66,6 +66,99 @@ body::before{
 }
 .side-test-btn:hover{background:var(--navy);}
 
+/* ── PIPELINE CARD (meta-layer, dominant) ── */
+.pipe-card{
+  position:relative;width:100%;padding:14px;margin-bottom:14px;
+  background:linear-gradient(145deg,#0f1f3d 0%,#1a3a6e 55%,#26508f 100%);
+  border:1px solid #3a6db0;color:#eaf3ff;overflow:hidden;
+  box-shadow:0 6px 22px rgba(15,31,61,.35);
+}
+.pipe-card::before{
+  content:'';position:absolute;inset:0;pointer-events:none;opacity:.10;
+  background-image:linear-gradient(#9fc4f5 1px,transparent 1px),
+    linear-gradient(90deg,#9fc4f5 1px,transparent 1px);
+  background-size:18px 18px;
+}
+.pipe-tag{
+  position:relative;display:inline-block;font-family:monospace;font-size:8px;
+  letter-spacing:1.5px;text-transform:uppercase;color:#bcd6ff;
+  border:1px solid rgba(159,196,245,.5);padding:2px 6px;margin-bottom:9px;
+}
+.pipe-name{position:relative;font-weight:800;font-size:20px;letter-spacing:-.5px;color:#fff;line-height:1;}
+.pipe-sub{position:relative;font-family:monospace;font-size:10px;color:#a9c8f2;margin-top:4px;}
+.pipe-flows{position:relative;margin:11px 0 9px;display:flex;flex-direction:column;gap:6px;}
+.pipe-flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.pf-node{
+  font-family:monospace;font-size:9px;font-weight:700;color:#0f1f3d;
+  background:#cfe2fb;padding:3px 7px;border-radius:2px;white-space:nowrap;
+}
+.pf-arrow{color:#7fb0ee;font-size:11px;font-weight:700;}
+.pipe-meta{position:relative;border-top:1px solid rgba(159,196,245,.28);padding-top:8px;margin-top:2px;}
+.pipe-ep{display:flex;align-items:center;gap:6px;}
+.pipe-ep-path{font-family:monospace;font-size:9px;color:#dcebff;color:#d6e6ff;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pipe-ep-price{font-family:monospace;font-size:9px;font-weight:800;color:#9fe0c0;white-space:nowrap;}
+.pipe-note{font-family:monospace;font-size:8px;color:#9bbdea;margin-top:5px;}
+.pipe-url{font-family:monospace;font-size:8px;color:#8fb3e6;margin-top:6px;word-break:break-all;}
+.pipe-cp{background:rgba(159,196,245,.12);border:1px solid rgba(159,196,245,.45);padding:2px 5px;font-size:8px;cursor:pointer;color:#cfe2fb;font-family:monospace;}
+.pipe-cp:hover{border-color:#fff;color:#fff;}
+.pipe-cp.ok{border-color:#9fe0c0;color:#9fe0c0;}
+
+/* ── HAMBURGER MENU ── */
+.ph{display:flex;align-items:flex-start;justify-content:space-between;}
+.ph-text h1{font-size:22px;font-weight:700;color:var(--navy);letter-spacing:-.5px;}
+.ph-text p{font-size:10px;color:var(--muted);margin-top:3px;font-family:monospace;}
+.ham-btn{
+  background:none;border:1px solid var(--border);color:var(--navy);
+  font-size:15px;line-height:1;padding:4px 8px;cursor:pointer;
+}
+.ham-btn:hover{border-color:var(--accent);color:var(--accent);}
+.ham-menu{
+  display:none;position:absolute;top:46px;right:14px;z-index:50;
+  background:var(--panel);border:1px solid var(--border);
+  box-shadow:0 8px 24px rgba(15,31,61,.18);min-width:150px;
+}
+.ham-menu.open{display:block;}
+.ham-menu a{
+  display:block;padding:9px 14px;font-size:11px;color:var(--text);
+  text-decoration:none;border-bottom:1px solid var(--border);font-family:monospace;
+}
+.ham-menu a:last-child{border-bottom:none;}
+.ham-menu a:hover{background:var(--bg);color:var(--accent);}
+
+/* ── PANEL FLOW DIAGRAM (center) ── */
+.now-live{
+  margin-top:8px;border:1px solid var(--accent);background:var(--panel);
+  padding:20px;position:relative;
+}
+.nl-badge{
+  display:inline-block;font-family:monospace;font-size:9px;letter-spacing:1.2px;
+  text-transform:uppercase;color:#fff;background:var(--accent);padding:3px 8px;margin-bottom:10px;
+}
+.nl-title{font-size:22px;font-weight:700;color:var(--navy);letter-spacing:-.5px;}
+.nl-desc{font-size:13px;color:var(--text);line-height:1.6;margin-top:8px;}
+.flow-diagram{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:18px 0;
+  padding:16px;background:var(--bg);border:1px solid var(--border);
+}
+.fd-box{
+  font-family:monospace;font-size:11px;font-weight:700;
+  padding:9px 12px;border:1px solid var(--accent);background:var(--panel);
+  color:var(--navy);white-space:nowrap;
+}
+.fd-box.meta{background:linear-gradient(145deg,#1a3a6e,#26508f);color:#fff;border-color:#26508f;}
+.fd-box.payload{border-style:dashed;color:var(--muted);}
+.fd-box.out{border-color:#27ae60;color:#1e7e44;}
+.fd-arrow{color:var(--accent);font-size:15px;font-weight:700;}
+.nl-highlight{
+  font-size:12px;color:var(--accent);font-weight:600;font-family:monospace;
+  border-left:3px solid var(--accent);padding-left:10px;margin:14px 0;line-height:1.5;
+}
+.nl-eps{display:flex;flex-direction:column;gap:10px;margin-top:16px;}
+.nl-ep{background:var(--bg);border:1px solid var(--border);padding:10px 12px;}
+.nl-ep code{font-family:monospace;font-size:11px;color:var(--navy);font-weight:700;}
+.nl-ep .nl-ep-note{font-family:monospace;font-size:10px;color:var(--muted);margin-top:4px;}
+.panel-foot{font-size:13px;color:var(--text);line-height:1.7;margin-top:28px;padding-top:24px;border-top:1px solid var(--border);}
+
 /* ── CENTER ── */
 #center{
   flex:1;min-height:100vh;display:flex;flex-direction:column;
@@ -154,12 +247,46 @@ textarea.tm-in{resize:vertical;min-height:46px;}
 <!-- LEFT -->
 <div id="left">
   <div class="ph">
-    <h1>Distill</h1>
-    <p>middleware for the agent economy</p>
+    <div class="ph-text">
+      <h1>Distill</h1>
+      <p>middleware for the agent economy</p>
+    </div>
+    <button class="ham-btn" id="ham-btn" onclick="toggleHam()" aria-label="menu">☰</button>
+    <div class="ham-menu" id="ham-menu">
+      <a href="./docs/" >Docs</a>
+      <a href="https://github.com/Quitx5454" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://xgate.run" target="_blank" rel="noopener">xgate</a>
+      <a href="https://x.com/Distill__" target="_blank" rel="noopener">Twitter / X</a>
+      <a href="https://8004scan.io" target="_blank" rel="noopener">8004scan</a>
+    </div>
   </div>
 
   <div class="sec">
     <div class="sec-title">Our Agents</div>
+
+    <!-- Pipeline — the orchestrator / meta-layer -->
+    <div class="pipe-card">
+      <span class="pipe-tag">orchestrator</span>
+      <div class="pipe-name">Pipeline</div>
+      <div class="pipe-sub">chain any agents. one call.</div>
+      <div class="pipe-flows">
+        <div class="pipe-flow">
+          <span class="pf-node">Trace</span><span class="pf-arrow">→</span><span class="pf-node">Forge</span>
+        </div>
+        <div class="pipe-flow">
+          <span class="pf-node">Shield</span><span class="pf-arrow">→</span><span class="pf-node">Refine</span>
+        </div>
+      </div>
+      <div class="pipe-meta">
+        <div class="pipe-ep">
+          <span class="pipe-ep-path" title="/entrypoints/pipeline/invoke">/entrypoints/pipeline/invoke</span>
+          <span class="pipe-ep-price">0.03 USDC</span>
+          <button class="pipe-cp" onclick="cp(this,'https://pipeline-agent-production-7736.up.railway.app/entrypoints/pipeline/invoke')">copy</button>
+        </div>
+        <div class="pipe-note">GET /status/:task_id — free</div>
+        <div class="pipe-url">pipeline-agent-production-7736.up.railway.app</div>
+      </div>
+    </div>
 
     <div class="our-card">
       <div class="our-name">Refine</div>
@@ -217,6 +344,52 @@ textarea.tm-in{resize:vertical;min-height:46px;}
     <h2>Pure signal, no noise.</h2>
     <p>Distill builds stateless middleware agents for the x402/ERC-8004 economy. Clean data, safe execution, verifiable trust.</p>
     <div class="accent-line">Pay per call in USDC on Base. No accounts. No subscriptions.</div>
+
+    <div class="divider"></div>
+
+    <!-- Pipeline feature highlight -->
+    <div class="now-live">
+      <span class="nl-badge">Now live: Pipeline</span>
+      <div class="nl-title">One call chains multiple agents.</div>
+      <div class="nl-desc">
+        Pipeline runs your chosen agents in sequence — async execution, automatic
+        output→input routing between steps, and a <code>task_id</code> you poll for results.
+        You never wire the agents together yourself.
+      </div>
+
+      <div class="flow-diagram">
+        <span class="fd-box payload">your payload</span>
+        <span class="fd-arrow">→</span>
+        <span class="fd-box meta">Pipeline</span>
+        <span class="fd-arrow">→</span>
+        <span class="fd-box">Trace</span>
+        <span class="fd-arrow">→</span>
+        <span class="fd-box">Forge</span>
+        <span class="fd-arrow">→</span>
+        <span class="fd-box out">on-chain proof</span>
+      </div>
+
+      <div class="nl-highlight">
+        The first multi-agent orchestration middleware for the x402/ERC-8004 ecosystem.
+      </div>
+
+      <div class="nl-eps">
+        <div class="nl-ep">
+          <code>POST /entrypoints/pipeline/invoke</code>
+          <div class="nl-ep-note">→ returns <b>task_id</b> instantly · 0.03 USDC</div>
+        </div>
+        <div class="nl-ep">
+          <code>GET /entrypoints/pipeline/status/:task_id</code>
+          <div class="nl-ep-note">→ poll for results · free</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-foot">
+      Any agent with a wallet can call Distill services directly — no accounts, no
+      subscriptions, no API keys. Compose them into pipelines, settle per call in USDC
+      on Base, and earn verifiable on-chain reputation as you go.
+    </div>
   </div>
 </div>
 
@@ -265,10 +438,23 @@ var PROXY_URL = 'https://x402-proxy.pulse-x402.workers.dev';
 // ── copy-to-clipboard ────────────────────────────────
 function cp(btn, url) {
   navigator.clipboard.writeText(url).then(function() {
+    var def = btn.textContent;
     btn.textContent = 'ok!'; btn.classList.add('ok');
     setTimeout(function() { btn.textContent = 'copy'; btn.classList.remove('ok'); }, 1800);
   });
 }
+
+// ── hamburger menu ───────────────────────────────────
+function toggleHam() {
+  document.getElementById('ham-menu').classList.toggle('open');
+}
+// close the menu when clicking anywhere outside it
+document.addEventListener('click', function(e) {
+  var menu = document.getElementById('ham-menu');
+  var btn  = document.getElementById('ham-btn');
+  if (!menu || !btn) return;
+  if (!menu.contains(e.target) && e.target !== btn) menu.classList.remove('open');
+});
 
 // ── TEST AGENT MODAL (x402 v2) ───────────────────────
 // The actual payment logic lives in the <script type="module"> below
