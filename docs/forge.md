@@ -125,4 +125,4 @@ Every Distill agent optionally accepts a standard envelope and always replies wi
 - `output` — the agent's normal output
 - `processed_at` — ISO 8601 timestamp
 
-> The same envelope applies to the [Trace](./trace.md) endpoint on this service.
+> The same envelope applies to the [Trace](./trace.html) endpoint on this service.

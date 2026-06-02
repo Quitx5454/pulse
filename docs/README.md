@@ -14,10 +14,10 @@ Pay per call in USDC on Base.
 
 | Agent | What it does | Price |
 |-------|-------------|-------|
-| [Refine](./refine.md) | Strips bot activity from raw on-chain transaction data | 0.02 USDC |
-| [Forge](./forge.md) | Compiles ERC-8004 reputation proofs | 0.02 USDC |
-| [Shield](./shield.md) | Sanitizes x402 payment metadata, strips PII | 0.005 USDC |
-| [Trace](./trace.md) | Structures agent execution logs into readable JSON | 0.01 USDC |
+| [Refine](./refine.html) | Strips bot activity from raw on-chain transaction data | 0.02 USDC |
+| [Forge](./forge.html) | Compiles ERC-8004 reputation proofs | 0.02 USDC |
+| [Shield](./shield.html) | Sanitizes x402 payment metadata, strips PII | 0.005 USDC |
+| [Trace](./trace.html) | Structures agent execution logs into readable JSON | 0.01 USDC |
 
 ---
 
