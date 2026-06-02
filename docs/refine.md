@@ -20,15 +20,17 @@ Refine removes the noise before it reaches your agent.
 
 ## Request
 
+Send the rows under a `data` array. Column names are flexible — Refine
+auto-detects address / amount / timestamp / hash columns from your data.
+
 ```json
 {
-  "transactions": [
+  "data": [
     {
-      "hash": "0xabc...",
-      "from": "0x123...",
-      "to": "0x456...",
-      "value": "1000000",
-      "timestamp": 1717320000
+      "tx_hash": "0xabc...",
+      "tx_from_address": "0x123...",
+      "amount": "1000000",
+      "timestamp": "2026-05-28T20:13:59Z"
     }
   ]
 }
@@ -38,14 +40,31 @@ Refine removes the noise before it reaches your agent.
 
 ```json
 {
-  "clean_transactions": [...],
-  "bot_transactions": [...],
   "summary": {
-    "total": 100,
-    "clean": 87,
-    "bots": 13,
-    "bot_percentage": 13
-  }
+    "total_transactions": 100,
+    "bot_filtered": 13,
+    "suspicious": 0,
+    "clean_transactions": 87,
+    "bot_ratio": "13%"
+  },
+  "warnings": {
+    "noAddressColumn": false,
+    "noAmountColumn": false,
+    "noTimestampColumn": false
+  },
+  "features": {
+    "totalVolume": 1250,
+    "cleanVolume": 1250,
+    "suspiciousVolume": 0,
+    "botVolume": 0,
+    "volumeConfidence": "100%",
+    "uniqueCounterparties": 2,
+    "avgTransactionSize": 625,
+    "peakActivity": "20:00-21:00 UTC",
+    "recurringPatterns": []
+  },
+  "clean_data": [],
+  "suspicious_data": []
 }
 ```
 
@@ -56,7 +75,7 @@ Refine removes the noise before it reaches your agent.
 ```bash
 curl -X POST https://distill-agent-production.up.railway.app/entrypoints/process/invoke \
   -H "Content-Type: application/json" \
-  -d '{"transactions": [...]}'
+  -d '{"data": [...]}'
 # Returns 402 — pay via Test Agent UI at https://quitx5454.github.io/pulse
 ```
 
@@ -74,8 +93,8 @@ Every Distill agent optionally accepts a standard envelope and always replies wi
   "agent_id": "6482",
   "session_id": "test-session-001",
   "payload": {
-    "transactions": [
-      { "hash": "0xabc...", "from": "0x123...", "to": "0x456...", "value": "1000000", "timestamp": 1717320000 }
+    "data": [
+      { "tx_hash": "0xabc...", "tx_from_address": "0x123...", "amount": "1000000", "timestamp": "2026-05-28T20:13:59Z" }
     ]
   }
 }
@@ -94,9 +113,10 @@ Every Distill agent optionally accepts a standard envelope and always replies wi
   "session_id": "test-session-001",
   "status": "ok",
   "output": {
-    "clean_transactions": [],
-    "bot_transactions": [],
-    "summary": { "total": 100, "clean": 87, "bots": 13, "bot_percentage": 13 }
+    "summary": { "total_transactions": 100, "bot_filtered": 13, "suspicious": 0, "clean_transactions": 87, "bot_ratio": "13%" },
+    "features": { "totalVolume": 1250, "cleanVolume": 1250, "uniqueCounterparties": 2, "avgTransactionSize": 625 },
+    "clean_data": [],
+    "suspicious_data": []
   },
   "processed_at": "2026-06-02T16:21:11.827Z"
 }
