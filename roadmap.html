@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Distill — Roadmap</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#eef6fd;
+  --panel:#ffffff;
+  --border:#c5ddf5;
+  --grid:#b8d4ef;
+  --accent:#2980d9;
+  --navy:#1a3a6e;
+  --text:#1a2a3a;
+  --muted:#5a7a9a;
+}
+html,body{height:100%;}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-size:13px;min-height:100vh;position:relative;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:40px 40px;opacity:.2;
+}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--border);}
+
+a{color:inherit;}
+
+.wrap{position:relative;z-index:5;max-width:920px;margin:0 auto;padding:48px 40px 80px;}
+
+/* back link */
+.back{
+  display:inline-block;font-family:monospace;font-size:11px;color:var(--accent);
+  text-decoration:none;margin-bottom:28px;border:1px solid var(--border);
+  padding:6px 11px;background:var(--panel);
+}
+.back:hover{border-color:var(--accent);background:var(--bg);}
+
+/* header */
+.head h1{font-size:38px;font-weight:700;color:var(--navy);letter-spacing:-1px;line-height:1.1;}
+.head p{font-size:15px;color:var(--text);line-height:1.7;margin-top:14px;max-width:620px;}
+.head .accent-line{font-size:14px;color:var(--accent);font-weight:600;margin-top:6px;font-family:monospace;}
+
+/* legend */
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:22px;}
+.legend span{font-family:monospace;font-size:10px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+
+.divider{height:1px;background:var(--border);margin:36px 0;}
+
+/* phase */
+.phase{margin-bottom:30px;}
+.phase-hd{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px;}
+.phase-num{font-family:monospace;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.4px;}
+.phase-title{font-size:22px;font-weight:700;color:var(--navy);letter-spacing:-.5px;}
+.phase-status{
+  display:inline-block;font-family:monospace;font-size:9px;letter-spacing:1.2px;
+  text-transform:uppercase;padding:3px 9px;font-weight:700;
+}
+.st-shipped{background:#e7f7ee;color:#1e7e44;border:1px solid #27ae60;}
+.st-next{background:#e8f2fd;color:var(--accent);border:1px solid var(--accent);}
+.st-planned{background:#f0eafb;color:#6b3fb0;border:1px solid #8a5fd0;}
+
+.phase-sub{font-family:monospace;font-size:11px;color:var(--muted);margin-bottom:16px;}
+
+/* item cards */
+.items{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+.item{
+  background:var(--panel);border:1px solid var(--border);padding:14px 16px;
+  position:relative;
+}
+.item.shipped{border-left:3px solid #27ae60;}
+.item.next{border-left:3px solid var(--accent);}
+.item.planned{border-left:3px solid #8a5fd0;}
+.item-name{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:5px;display:flex;align-items:center;gap:7px;}
+.item-name .dot{font-size:11px;}
+.item-desc{font-size:11px;color:var(--muted);line-height:1.55;}
+
+/* dominant "now live" style block for the shipped phase header — reuse panel feel */
+.phase.shipped-phase .phase-title{color:#1e7e44;}
+
+.foot{
+  font-size:13px;color:var(--text);line-height:1.7;margin-top:40px;
+  padding-top:24px;border-top:1px solid var(--border);
+}
+.foot a{color:var(--accent);text-decoration:none;font-weight:600;}
+.foot a:hover{text-decoration:underline;}
+
+@media(max-width:768px){
+  .wrap{padding:32px 22px 60px;}
+  .head h1{font-size:28px;}
+  .items{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <a class="back" href="index.html">← back to Distill</a>
+
+  <div class="head">
+    <h1>Roadmap</h1>
+    <p>Distill builds stateless middleware agents for the x402/ERC-8004 economy. Here's what's shipped, what's next, and where we're headed.</p>
+    <div class="accent-line">Pure signal, no noise.</div>
+
+    <div class="legend">
+      <span>✅ shipped</span>
+      <span>🔵 next</span>
+      <span>🟣 planned</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- PHASE 1 -->
+  <div class="phase shipped-phase">
+    <div class="phase-hd">
+      <span class="phase-num">Phase 1</span>
+      <span class="phase-title">Core Infrastructure</span>
+      <span class="phase-status st-shipped">✅ shipped</span>
+    </div>
+    <div class="phase-sub">the agents and shared schema running live today</div>
+    <div class="items">
+      <div class="item shipped">
+        <div class="item-name"><span class="dot">✅</span>Refine</div>
+        <div class="item-desc">bot filtering, transaction cleaning</div>
+      </div>
+      <div class="item shipped">
+        <div class="item-name"><span class="dot">✅</span>Forge</div>
+        <div class="item-desc">ERC-8004 reputation proof compiler</div>
+      </div>
+      <div class="item shipped">
+        <div class="item-name"><span class="dot">✅</span>Shield</div>
+        <div class="item-desc">x402 PII sanitizer + replay guard</div>
+      </div>
+      <div class="item shipped">
+        <div class="item-name"><span class="dot">✅</span>Trace</div>
+        <div class="item-desc">agent log structurer + forge-ready score</div>
+      </div>
+      <div class="item shipped">
+        <div class="item-name"><span class="dot">✅</span>Standard Envelope</div>
+        <div class="item-desc">shared schema across all agents</div>
+      </div>
+      <div class="item shipped">
+        <div class="item-name"><span class="dot">✅</span>Pipeline</div>
+        <div class="item-desc">multi-agent orchestration, single call</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- PHASE 2 -->
+  <div class="phase">
+    <div class="phase-hd">
+      <span class="phase-num">Phase 2</span>
+      <span class="phase-title">Interoperability</span>
+      <span class="phase-status st-next">🔵 next</span>
+    </div>
+    <div class="phase-sub">make Distill agents speak every agent framework's native language</div>
+    <div class="items">
+      <div class="item next">
+        <div class="item-name"><span class="dot">🔵</span>MCP support</div>
+        <div class="item-desc">Distill agents as native tools for Daydreams + any MCP-compatible framework</div>
+      </div>
+      <div class="item next">
+        <div class="item-name"><span class="dot">🔵</span>Webhook support</div>
+        <div class="item-desc">push notifications, event-driven pipeline completion</div>
+      </div>
+      <div class="item next">
+        <div class="item-name"><span class="dot">🔵</span>A2A Agent Cards</div>
+        <div class="item-desc">machine-readable capability discovery</div>
+      </div>
+      <div class="item next">
+        <div class="item-name"><span class="dot">🔵</span>Dynamic graph routing</div>
+        <div class="item-desc">runtime pipeline composition</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- PHASE 3 -->
+  <div class="phase">
+    <div class="phase-hd">
+      <span class="phase-num">Phase 3</span>
+      <span class="phase-title">Ecosystem Expansion</span>
+      <span class="phase-status st-planned">🟣 planned</span>
+    </div>
+    <div class="phase-sub">new agents and reach beyond the current network</div>
+    <div class="items">
+      <div class="item planned">
+        <div class="item-name"><span class="dot">🟣</span>Gaming data agent</div>
+        <div class="item-desc">on-chain game event structuring</div>
+      </div>
+      <div class="item planned">
+        <div class="item-name"><span class="dot">🟣</span>Governance agent</div>
+        <div class="item-desc">DAO proposal + vote parsing</div>
+      </div>
+      <div class="item planned">
+        <div class="item-name"><span class="dot">🟣</span>Agent registry</div>
+        <div class="item-desc">semantic discovery, capability matching</div>
+      </div>
+      <div class="item planned">
+        <div class="item-name"><span class="dot">🟣</span>Multi-chain support</div>
+        <div class="item-desc">beyond Base Mainnet</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    Every Distill agent is callable today — pay per call in USDC on Base, no accounts,
+    no subscriptions. <a href="index.html">← back to Distill</a>
+  </div>
+
+</div>
+</body>
+</html>
