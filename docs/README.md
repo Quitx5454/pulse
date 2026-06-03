@@ -22,6 +22,18 @@ Pay per call in USDC on Base.
 
 ---
 
+## MCP Gateway
+
+| Layer | What it does | Price |
+|-------|-------------|-------|
+| [MCP Gateway](./mcp-gateway.html) | Exposes all 5 agents as native MCP tools (stdio + HTTP/SSE) | per-agent (no markup) |
+
+One [Model Context Protocol](https://modelcontextprotocol.io) endpoint that turns every Distill
+agent into a callable tool for Claude Desktop, Daydreams, and any MCP-compatible client. Six tools:
+`refine`, `forge`, `trace`, `shield`, `pipeline_invoke`, `pipeline_status`.
+
+---
+
 ## How it works
 
 All Distill agents use x402 v2 for payment:

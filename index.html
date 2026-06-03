@@ -103,6 +103,19 @@ body::before{
 .pipe-cp:hover{border-color:#fff;color:#fff;}
 .pipe-cp.ok{border-color:#9fe0c0;color:#9fe0c0;}
 
+/* ── MCP GATEWAY CARD (unified tool layer, lighter than Pipeline) ── */
+.mcp-card{background:var(--panel);border:1px dashed var(--accent);padding:12px;margin-bottom:14px;}
+.mcp-head{display:flex;align-items:center;gap:7px;margin-bottom:3px;}
+.mcp-name{font-weight:800;font-size:15px;color:var(--navy);letter-spacing:-.3px;}
+.mcp-tag{font-family:monospace;font-size:8px;letter-spacing:1.4px;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);padding:2px 5px;}
+.mcp-sub{font-size:9px;color:var(--muted);font-family:monospace;margin-bottom:9px;}
+.mcp-tools{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+.mcp-tool{font-family:monospace;font-size:9px;font-weight:700;color:var(--navy);background:var(--bg);border:1px solid var(--border);padding:3px 6px;}
+.mcp-foot{display:flex;align-items:center;justify-content:space-between;gap:6px;border-top:1px solid var(--border);padding-top:8px;}
+.mcp-url{font-family:monospace;font-size:8px;color:var(--muted);word-break:break-all;flex:1;min-width:0;}
+.mcp-docs{font-family:monospace;font-size:9px;color:var(--accent);text-decoration:none;white-space:nowrap;font-weight:700;}
+.mcp-docs:hover{text-decoration:underline;}
+
 /* ── HAMBURGER MENU ── */
 .ph{display:flex;align-items:flex-start;justify-content:space-between;}
 .ph-text h1{font-size:22px;font-weight:700;color:var(--navy);letter-spacing:-.5px;}
@@ -158,6 +171,23 @@ body::before{
 .nl-ep code{font-family:monospace;font-size:11px;color:var(--navy);font-weight:700;}
 .nl-ep .nl-ep-note{font-family:monospace;font-size:10px;color:var(--muted);margin-top:4px;}
 .panel-foot{font-size:13px;color:var(--text);line-height:1.7;margin-top:28px;padding-top:24px;border-top:1px solid var(--border);}
+
+/* ── PHASE 2 SHIPPED (center) ── */
+.phase2{margin-top:28px;border:1px solid var(--border);background:var(--bg);padding:18px;}
+.phase2-badge{
+  display:inline-block;font-family:monospace;font-size:9px;letter-spacing:1.2px;
+  text-transform:uppercase;color:#1e7e44;background:#e8f6ee;border:1px solid #27ae60;
+  padding:3px 8px;margin-bottom:14px;
+}
+.phase2-list{display:flex;flex-direction:column;gap:11px;}
+.p2-item{display:flex;gap:9px;align-items:flex-start;}
+.p2-check{color:#27ae60;font-weight:800;font-family:monospace;font-size:13px;flex-shrink:0;line-height:1.5;}
+.p2-body{font-size:12px;color:var(--text);line-height:1.55;}
+.p2-body b{color:var(--navy);}
+.p2-body code{font-family:monospace;font-size:11px;color:var(--accent);}
+.p2-link{color:var(--accent);font-weight:600;text-decoration:none;font-family:monospace;font-size:11px;}
+.p2-link:hover{text-decoration:underline;}
+.p2-pending{color:#b8860b;font-weight:600;}
 
 /* ── CENTER ── */
 #center{
@@ -254,6 +284,7 @@ textarea.tm-in{resize:vertical;min-height:46px;}
     <button class="ham-btn" id="ham-btn" onclick="toggleHam()" aria-label="menu">☰</button>
     <div class="ham-menu" id="ham-menu">
       <a href="./docs/" >Docs</a>
+      <a href="./docs/mcp-gateway.html">MCP Gateway</a>
       <a href="/pulse/roadmap.html">Roadmap</a>
       <a href="https://github.com/Quitx5454" target="_blank" rel="noopener">GitHub</a>
       <a href="https://xgate.run" target="_blank" rel="noopener">xgate</a>
@@ -286,6 +317,27 @@ textarea.tm-in{resize:vertical;min-height:46px;}
         </div>
         <div class="pipe-note">GET /status/:task_id — free</div>
         <div class="pipe-url">pipeline-agent-production-7736.up.railway.app</div>
+      </div>
+    </div>
+
+    <!-- MCP Gateway — unified tool layer over all 5 agents -->
+    <div class="mcp-card">
+      <div class="mcp-head">
+        <span class="mcp-name">MCP Gateway</span>
+        <span class="mcp-tag">mcp server</span>
+      </div>
+      <div class="mcp-sub">5 agents · one endpoint · stdio + HTTP/SSE</div>
+      <div class="mcp-tools">
+        <span class="mcp-tool">refine</span>
+        <span class="mcp-tool">forge</span>
+        <span class="mcp-tool">trace</span>
+        <span class="mcp-tool">shield</span>
+        <span class="mcp-tool">pipeline_invoke</span>
+        <span class="mcp-tool">pipeline_status</span>
+      </div>
+      <div class="mcp-foot">
+        <span class="mcp-url">mcp-gateway-production-e02e.up.railway.app</span>
+        <a class="mcp-docs" href="./docs/mcp-gateway.html">docs →</a>
       </div>
     </div>
 
@@ -382,6 +434,34 @@ textarea.tm-in{resize:vertical;min-height:46px;}
         <div class="nl-ep">
           <code>GET /entrypoints/pipeline/status/:task_id</code>
           <div class="nl-ep-note">→ poll for results · free</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 2 shipped -->
+    <div class="phase2">
+      <span class="phase2-badge">Phase 2 shipped</span>
+      <div class="phase2-list">
+        <div class="p2-item">
+          <span class="p2-check">✓</span>
+          <div class="p2-body">
+            <b>A2A Agent Cards</b> — a full <code>/.well-known/agent-card.json</code> on all 5 agents,
+            with skills, security schemes, x402 payment metadata, and ERC-8004 registration.
+          </div>
+        </div>
+        <div class="p2-item">
+          <span class="p2-check">✓</span>
+          <div class="p2-body">
+            <b>MCP Gateway</b> — every agent as a native MCP tool (6 tools) over stdio + HTTP/SSE, from one
+            endpoint. <a class="p2-link" href="./docs/mcp-gateway.html">Read the docs →</a>
+          </div>
+        </div>
+        <div class="p2-item">
+          <span class="p2-check">✓</span>
+          <div class="p2-body">
+            <b>x402 Bazaar registration</b> — discovery extension live on every agent and settlement
+            verified on-chain. <span class="p2-pending">Catalog indexing pending — the CDP facilitator indexes asynchronously.</span>
+          </div>
         </div>
       </div>
     </div>
