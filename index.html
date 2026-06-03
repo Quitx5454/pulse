@@ -316,6 +316,7 @@ textarea.tm-in{resize:vertical;min-height:46px;}
           <button class="pipe-cp" onclick="cp(this,'https://pipeline-agent-production-7736.up.railway.app/entrypoints/pipeline/invoke')">copy</button>
         </div>
         <div class="pipe-note">GET /status/:task_id — free</div>
+        <div class="pipe-note">webhooks — push result on completion</div>
         <div class="pipe-url">pipeline-agent-production-7736.up.railway.app</div>
       </div>
     </div>
@@ -406,7 +407,8 @@ textarea.tm-in{resize:vertical;min-height:46px;}
       <div class="nl-title">One call chains multiple agents.</div>
       <div class="nl-desc">
         Pipeline runs your chosen agents in sequence — async execution, automatic
-        output→input routing between steps, and a <code>task_id</code> you poll for results.
+        output→input routing between steps, and a <code>task_id</code> you poll for results
+        (or register a <code>callback_url</code> to get them pushed back as a signed webhook).
         You never wire the agents together yourself.
       </div>
 
@@ -461,6 +463,13 @@ textarea.tm-in{resize:vertical;min-height:46px;}
           <div class="p2-body">
             <b>x402 Bazaar registration</b> — discovery extension live on every agent and settlement
             verified on-chain. <span class="p2-pending">Catalog indexing pending — the CDP facilitator indexes asynchronously.</span>
+          </div>
+        </div>
+        <div class="p2-item">
+          <span class="p2-check">✓</span>
+          <div class="p2-body">
+            <b>Webhook push notifications</b> — register a <code>callback_url</code> on a Pipeline run and
+            the final result is POSTed back when it completes, signed with HMAC-SHA256. No more polling required.
           </div>
         </div>
       </div>

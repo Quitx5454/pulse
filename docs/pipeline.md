@@ -18,8 +18,9 @@ step's output into the next step's input. It pays the downstream agents internal
 you make **one** payment and get back a chained result.
 
 Execution is **asynchronous**. The paid invoke call returns a `task_id` immediately and the pipeline
-runs in the background — you poll the free status endpoint for progress and results. No combination
-is hardcoded: everything is driven by a static agent registry, so any order of
+runs in the background — you poll the free status endpoint for progress and results, or register a
+`callback_url` and have the result [pushed to you as a webhook](#webhooks). No combination is
+hardcoded: everything is driven by a static agent registry, so any order of
 `refine` · `forge` · `shield` · `trace` works.
 
 ```
@@ -130,6 +131,53 @@ Free. Returns live status — poll it after invoke. `status` is one of
   "completed_at": "2026-06-03T10:00:02.110Z"
 }
 ```
+
+---
+
+## Webhooks
+
+Instead of (or alongside) polling, you can have Pipeline **push** the result to you. Add a
+`callback_url` to the invoke body and, when the task reaches a terminal state
+(`completed` | `partial` | `failed`), Pipeline `POST`s the full status object to that URL. Webhooks
+are additive — polling is unchanged and `callback_url` is always optional. It's validated **before**
+the paywall, so a malformed URL returns `400` without a charge.
+
+```json
+{
+  "pipeline": ["trace", "forge"],
+  "payload": { "log": "…" },
+  "callback_url": "https://your-agent.com/webhooks/distill"
+}
+```
+
+The delivered `POST` body is the **exact same shape** as the status response above. Every delivery
+carries these headers:
+
+| header | value |
+|--------|-------|
+| `Content-Type` | `application/json` |
+| `X-Distill-Event` | `pipeline.completed` · `pipeline.partial` · `pipeline.failed` |
+| `X-Distill-Task-Id` | the `task_id` |
+| `X-Distill-Timestamp` | ISO-8601 delivery time |
+| `X-Distill-Signature` | `HMAC-SHA256(WEBHOOK_HMAC_SECRET, raw_body)`, hex |
+
+Delivery uses a 10 s timeout with up to 3 attempts (exponential backoff, 1 s / 2 s); a failed
+delivery never affects the task or the pollable status. Verify the signature over the **raw body
+bytes**:
+
+```ts
+import { createHmac, timingSafeEqual } from "node:crypto";
+
+function verify(rawBody: string, signature: string, secret: string): boolean {
+  const expected = createHmac("sha256", secret).update(rawBody, "utf8").digest("hex");
+  const a = Buffer.from(signature, "hex"), b = Buffer.from(expected, "hex");
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+```
+
+**Stateless caveat:** Pipeline's task store is in-memory only. If the server restarts before your
+task completes, the `callback_url` is lost with the task and no webhook fires — always keep a
+polling fallback with a timeout.
 
 ---
 
