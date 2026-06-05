@@ -59,6 +59,27 @@ body::before{
 .cp:hover{border-color:var(--accent);color:var(--accent);}
 .cp.ok{border-color:#27ae60;color:#27ae60;}
 
+/* Refine — featured premium agent card. Deep, smooth pastel-indigo gradient that
+   stands out against the light blueprint siblings while keeping crisp white text
+   at high contrast (all gradient stops >= 4.5:1). No harsh borders or shadows. */
+.our-card.refine-featured{
+  background:
+    radial-gradient(125% 125% at 0% 0%, rgba(255,255,255,.14), rgba(255,255,255,0) 46%),
+    linear-gradient(135deg, #5b64b3 0%, #7666ad 48%, #4d6cc0 100%);
+  border:1px solid rgba(255,255,255,.28);
+}
+.our-card.refine-featured .our-name{color:#ffffff;}
+.our-card.refine-featured .our-url{color:rgba(255,255,255,.72);}
+.our-card.refine-featured .our-desc{color:rgba(255,255,255,.93);}
+.our-card.refine-featured .ep-row{border-top:1px solid rgba(255,255,255,.22);}
+.our-card.refine-featured .ep-path{color:rgba(255,255,255,.85);}
+.our-card.refine-featured .ep-price{color:#ffffff;}
+.our-card.refine-featured .cp{border:1px solid rgba(255,255,255,.42);color:rgba(255,255,255,.85);}
+.our-card.refine-featured .cp:hover{border-color:#ffffff;color:#ffffff;}
+.our-card.refine-featured .cp.ok{border-color:#caffd8;color:#caffd8;}
+.refine-feats{margin-bottom:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.18);display:flex;flex-direction:column;gap:5px;}
+.refine-feat{font-size:9.5px;line-height:1.4;color:rgba(255,255,255,.9);font-weight:500;letter-spacing:.2px;padding-left:9px;border-left:2px solid rgba(255,255,255,.45);}
+
 .side-test-btn{
   display:block;width:100%;padding:10px;
   background:var(--accent);color:#fff;border:none;
@@ -342,10 +363,15 @@ textarea.tm-in{resize:vertical;min-height:46px;}
       </div>
     </div>
 
-    <div class="our-card">
+    <div class="our-card refine-featured">
       <div class="our-name">Refine</div>
       <div class="our-url">distill-agent-production.up.railway.app</div>
-      <div class="our-desc">strips bot activity from raw on-chain transaction data</div>
+      <div class="our-desc">Strips bot activity from raw on-chain transaction data using a high-performance Hybrid Machine Learning model.</div>
+      <div class="refine-feats">
+        <div class="refine-feat">Hybrid Cascade Architecture (Rules + AI)</div>
+        <div class="refine-feat">Ground-Truth Provenance (Verified Sybil Datasets)</div>
+        <div class="refine-feat">Real-time Behavioral &amp; Calldata Entropy Analysis</div>
+      </div>
       <div class="ep-row">
         <div class="ep-path" title="/entrypoints/process/invoke">/entrypoints/process/invoke</div>
         <span class="ep-price">0.02 USDC</span>
@@ -388,7 +414,7 @@ textarea.tm-in{resize:vertical;min-height:46px;}
   </div>
 
   <div class="sec">
-    <button class="side-test-btn" onclick="openTestModal()">⚡ Test any agent</button>
+    <button class="side-test-btn" onclick="openTestModal()">Test any agent</button>
   </div>
 </div>
 
