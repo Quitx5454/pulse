@@ -77,6 +77,35 @@ body::before{
 .our-card.refine-featured .cp{border:1px solid rgba(255,255,255,.42);color:rgba(255,255,255,.85);}
 .our-card.refine-featured .cp:hover{border-color:#ffffff;color:#ffffff;}
 .our-card.refine-featured .cp.ok{border-color:#caffd8;color:#caffd8;}
+
+/* Shield v2 — featured security card. Brushed-steel gradient (darker, cooler than
+   Refine's indigo) signalling the hardened middleware tier. Crisp light text. */
+.our-card.shield-featured {
+  background: linear-gradient(135deg, #3d4450 0%, #5a6272 30%, #7c8694 52%, #5a6272 72%, #2e3440 100%);
+  border: 1px solid rgba(255,255,255,.25);
+}
+.our-card.shield-featured .shield-v2-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: .06em;
+  color: rgba(255,255,255,.55);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-bottom: 8px;
+}
+.our-card.shield-featured .our-name { color: #e8eaed; }
+.our-card.shield-featured .our-url { color: rgba(255,255,255,.55); }
+.our-card.shield-featured .our-desc { color: rgba(255,255,255,.80); }
+.our-card.shield-featured .shield-feats { margin: 0 0 10px; display: flex; flex-direction: column; gap: 4px; }
+.our-card.shield-featured .shield-feat { font-size: 11px; color: rgba(255,255,255,.72); padding-left: 10px; border-left: 2px solid rgba(255,255,255,.25); line-height: 1.4; }
+.our-card.shield-featured .ep-row { border-top: 1px solid rgba(255,255,255,.15); }
+.our-card.shield-featured .ep-path { color: rgba(255,255,255,.70); }
+.our-card.shield-featured .ep-price { color: #e8eaed; }
+.our-card.shield-featured .cp { border: 1px solid rgba(255,255,255,.25); color: rgba(255,255,255,.70); }
+.our-card.shield-featured .cp:hover { border-color: #e8eaed; color: #e8eaed; }
+.our-card.shield-featured .cp.ok { border-color: #caffd8; color: #caffd8; }
 .refine-feats{margin-bottom:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.18);display:flex;flex-direction:column;gap:5px;}
 .refine-feat{font-size:9.5px;line-height:1.4;color:rgba(255,255,255,.9);font-weight:500;letter-spacing:.2px;padding-left:9px;border-left:2px solid rgba(255,255,255,.45);}
 
@@ -390,10 +419,17 @@ textarea.tm-in{resize:vertical;min-height:46px;}
       </div>
     </div>
 
-    <div class="our-card">
+    <div class="our-card shield-featured">
+      <div class="shield-v2-badge">SHIELD v2</div>
       <div class="our-name">Shield</div>
       <div class="our-url">shield-agent-v2-production.up.railway.app</div>
-      <div class="our-desc">sanitizes x402 payment metadata, strips PII</div>
+      <div class="our-desc">Sanitizes x402 payment metadata before settlement. Strips PII, enforces context-bound signatures, and locks nonces to prevent replay and substitution attacks.</div>
+      <div class="shield-feats">
+        <div class="shield-feat">Pessimistic Nonce Locking (Redis)</div>
+        <div class="shield-feat">Context-Bound EIP-712 Signatures</div>
+        <div class="shield-feat">Multi-Dimensional Spending Policy Engine</div>
+        <div class="shield-feat">Tamper-Evident HMAC-Chained Audit Logs</div>
+      </div>
       <div class="ep-row">
         <div class="ep-path" title="/entrypoints/shield/invoke">/entrypoints/shield/invoke</div>
         <span class="ep-price">0.005 USDC</span>
