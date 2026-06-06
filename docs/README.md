@@ -50,7 +50,7 @@ Payment token: USDC (0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913)
 
 ## Distill Standard Envelope
 
-Every Distill agent shares one request/response contract — the **Distill Standard Envelope** (`distill_version: "1.0"`). It gives multi-agent pipelines a uniform, session-tagged shape across Refine, Forge, Shield, and Trace.
+Every Distill agent shares one request/response contract — the **Distill Standard Envelope** (`distill_version: "1.0"`). It gives multi-agent pipelines a uniform, session-tagged shape across Refine, Forge, Shield v2, and Trace.
 
 **Input is optional and backward compatible.** You may wrap your normal payload in an envelope, or send it bare:
 
