@@ -3,7 +3,7 @@
 Sanitizes x402 payment metadata before it reaches the facilitator.
 Strips PII. Adds HMAC-SHA256 replay guard.
 
-**Endpoint:** `POST https://shield-agent-production.up.railway.app/entrypoints/shield/invoke`
+**Endpoint:** `POST https://shield-agent-v2-production.up.railway.app/entrypoints/shield/invoke`
 **Price:** 0.005 USDC/call
 **Network:** Base Mainnet (eip155:8453)
 
