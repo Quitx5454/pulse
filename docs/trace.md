@@ -4,7 +4,7 @@ Structures agent execution logs into readable JSON.
 Supports plaintext, JSON, OpenTelemetry, LangChain, OpenAI formats.
 Includes forge_ready output for direct ERC-8004 submission.
 
-**Endpoint:** `POST https://forge-agent-production.up.railway.app/entrypoints/trace/invoke`
+**Endpoint:** `POST https://trace-agent-production.up.railway.app/entrypoints/trace/invoke`
 **Price:** 0.01 USDC/call
 **Network:** Base Mainnet (eip155:8453)
 
