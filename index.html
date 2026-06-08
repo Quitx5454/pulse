@@ -116,44 +116,7 @@ body::before{
 }
 .side-test-btn:hover{background:var(--navy);}
 
-/* ── PIPELINE CARD (meta-layer, dominant) ── */
-.pipe-card{
-  position:relative;width:100%;padding:14px;margin-bottom:14px;
-  background:linear-gradient(145deg,#0f1f3d 0%,#1a3a6e 55%,#26508f 100%);
-  border:1px solid #3a6db0;color:#eaf3ff;overflow:hidden;
-  box-shadow:0 6px 22px rgba(15,31,61,.35);
-}
-.pipe-card::before{
-  content:'';position:absolute;inset:0;pointer-events:none;opacity:.10;
-  background-image:linear-gradient(#9fc4f5 1px,transparent 1px),
-    linear-gradient(90deg,#9fc4f5 1px,transparent 1px);
-  background-size:18px 18px;
-}
-.pipe-tag{
-  position:relative;display:inline-block;font-family:monospace;font-size:8px;
-  letter-spacing:1.5px;text-transform:uppercase;color:#bcd6ff;
-  border:1px solid rgba(159,196,245,.5);padding:2px 6px;margin-bottom:9px;
-}
-.pipe-name{position:relative;font-weight:800;font-size:20px;letter-spacing:-.5px;color:#fff;line-height:1;}
-.pipe-sub{position:relative;font-family:monospace;font-size:10px;color:#a9c8f2;margin-top:4px;}
-.pipe-flows{position:relative;margin:11px 0 9px;display:flex;flex-direction:column;gap:6px;}
-.pipe-flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
-.pf-node{
-  font-family:monospace;font-size:9px;font-weight:700;color:#0f1f3d;
-  background:#cfe2fb;padding:3px 7px;border-radius:2px;white-space:nowrap;
-}
-.pf-arrow{color:#7fb0ee;font-size:11px;font-weight:700;}
-.pipe-meta{position:relative;border-top:1px solid rgba(159,196,245,.28);padding-top:8px;margin-top:2px;}
-.pipe-ep{display:flex;align-items:center;gap:6px;}
-.pipe-ep-path{font-family:monospace;font-size:9px;color:#dcebff;color:#d6e6ff;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.pipe-ep-price{font-family:monospace;font-size:9px;font-weight:800;color:#9fe0c0;white-space:nowrap;}
-.pipe-note{font-family:monospace;font-size:8px;color:#9bbdea;margin-top:5px;}
-.pipe-url{font-family:monospace;font-size:8px;color:#8fb3e6;margin-top:6px;word-break:break-all;}
-.pipe-cp{background:rgba(159,196,245,.12);border:1px solid rgba(159,196,245,.45);padding:2px 5px;font-size:8px;cursor:pointer;color:#cfe2fb;font-family:monospace;}
-.pipe-cp:hover{border-color:#fff;color:#fff;}
-.pipe-cp.ok{border-color:#9fe0c0;color:#9fe0c0;}
-
-/* ── MCP GATEWAY CARD (unified tool layer, lighter than Pipeline) ── */
+/* ── MCP GATEWAY CARD (unified tool layer) ── */
 .mcp-card{background:var(--panel);border:1px dashed var(--accent);padding:12px;margin-bottom:14px;}
 .mcp-head{display:flex;align-items:center;gap:7px;margin-bottom:3px;}
 .mcp-name{font-weight:800;font-size:15px;color:var(--navy);letter-spacing:-.3px;}
@@ -346,45 +309,17 @@ textarea.tm-in{resize:vertical;min-height:46px;}
   <div class="sec">
     <div class="sec-title">Our Agents</div>
 
-    <!-- Pipeline — the orchestrator / meta-layer -->
-    <div class="pipe-card">
-      <span class="pipe-tag">orchestrator</span>
-      <div class="pipe-name">Pipeline</div>
-      <div class="pipe-sub">chain any agents. one call.</div>
-      <div class="pipe-flows">
-        <div class="pipe-flow">
-          <span class="pf-node">Trace</span><span class="pf-arrow">→</span><span class="pf-node">Forge</span>
-        </div>
-        <div class="pipe-flow">
-          <span class="pf-node">Shield</span><span class="pf-arrow">→</span><span class="pf-node">Refine</span>
-        </div>
-      </div>
-      <div class="pipe-meta">
-        <div class="pipe-ep">
-          <span class="pipe-ep-path" title="/entrypoints/pipeline/invoke">/entrypoints/pipeline/invoke</span>
-          <span class="pipe-ep-price">0.03 USDC</span>
-          <button class="pipe-cp" onclick="cp(this,'https://pipeline-agent-production-7736.up.railway.app/entrypoints/pipeline/invoke')">copy</button>
-        </div>
-        <div class="pipe-note">GET /status/:task_id — free</div>
-        <div class="pipe-note">webhooks — push result on completion</div>
-        <div class="pipe-url">pipeline-agent-production-7736.up.railway.app</div>
-      </div>
-    </div>
-
-    <!-- MCP Gateway — unified tool layer over all 5 agents -->
+    <!-- MCP Gateway — unified tool layer over all 3 agents -->
     <div class="mcp-card">
       <div class="mcp-head">
         <span class="mcp-name">MCP Gateway</span>
         <span class="mcp-tag">mcp server</span>
       </div>
-      <div class="mcp-sub">5 agents · one endpoint · stdio + HTTP/SSE</div>
+      <div class="mcp-sub">3 agents · one endpoint · stdio + HTTP/SSE</div>
       <div class="mcp-tools">
         <span class="mcp-tool">refine</span>
-        <span class="mcp-tool">forge</span>
         <span class="mcp-tool">trace</span>
         <span class="mcp-tool">shield</span>
-        <span class="mcp-tool">pipeline_invoke</span>
-        <span class="mcp-tool">pipeline_status</span>
       </div>
       <div class="mcp-foot">
         <span class="mcp-url">mcp-gateway-production-e02e.up.railway.app</span>
@@ -405,17 +340,6 @@ textarea.tm-in{resize:vertical;min-height:46px;}
         <div class="ep-path" title="/entrypoints/process/invoke">/entrypoints/process/invoke</div>
         <span class="ep-price">0.02 USDC</span>
         <button class="cp" onclick="cp(this,'https://distill-agent-production.up.railway.app/entrypoints/process/invoke')">copy</button>
-      </div>
-    </div>
-
-    <div class="our-card">
-      <div class="our-name">Forge</div>
-      <div class="our-url">forge-agent-production.up.railway.app</div>
-      <div class="our-desc">compiles ERC-8004 reputation proofs</div>
-      <div class="ep-row">
-        <div class="ep-path" title="/entrypoints/forge/invoke">/entrypoints/forge/invoke</div>
-        <span class="ep-price">0.02 USDC</span>
-        <button class="cp" onclick="cp(this,'https://forge-agent-production.up.railway.app/entrypoints/forge/invoke')">copy</button>
       </div>
     </div>
 
@@ -463,45 +387,6 @@ textarea.tm-in{resize:vertical;min-height:46px;}
 
     <div class="divider"></div>
 
-    <!-- Pipeline feature highlight -->
-    <div class="now-live">
-      <span class="nl-badge">Now live: Pipeline</span>
-      <div class="nl-title">One call chains multiple agents.</div>
-      <div class="nl-desc">
-        Pipeline runs your chosen agents in sequence — async execution, automatic
-        output→input routing between steps, and a <code>task_id</code> you poll for results
-        (or register a <code>callback_url</code> to get them pushed back as a signed webhook).
-        You never wire the agents together yourself.
-      </div>
-
-      <div class="flow-diagram">
-        <span class="fd-box payload">your payload</span>
-        <span class="fd-arrow">→</span>
-        <span class="fd-box meta">Pipeline</span>
-        <span class="fd-arrow">→</span>
-        <span class="fd-box">Trace</span>
-        <span class="fd-arrow">→</span>
-        <span class="fd-box">Forge</span>
-        <span class="fd-arrow">→</span>
-        <span class="fd-box out">on-chain proof</span>
-      </div>
-
-      <div class="nl-highlight">
-        The first multi-agent orchestration middleware for the x402/ERC-8004 ecosystem.
-      </div>
-
-      <div class="nl-eps">
-        <div class="nl-ep">
-          <code>POST /entrypoints/pipeline/invoke</code>
-          <div class="nl-ep-note">→ returns <b>task_id</b> instantly · 0.03 USDC</div>
-        </div>
-        <div class="nl-ep">
-          <code>GET /entrypoints/pipeline/status/:task_id</code>
-          <div class="nl-ep-note">→ poll for results · free</div>
-        </div>
-      </div>
-    </div>
-
     <!-- Phase 2 shipped -->
     <div class="phase2">
       <span class="phase2-badge">Phase 2 shipped</span>
@@ -509,14 +394,14 @@ textarea.tm-in{resize:vertical;min-height:46px;}
         <div class="p2-item">
           <span class="p2-check">✓</span>
           <div class="p2-body">
-            <b>A2A Agent Cards</b> — a full <code>/.well-known/agent-card.json</code> on all 5 agents,
+            <b>A2A Agent Cards</b> — a full <code>/.well-known/agent-card.json</code> on all 3 agents,
             with skills, security schemes, x402 payment metadata, and ERC-8004 registration.
           </div>
         </div>
         <div class="p2-item">
           <span class="p2-check">✓</span>
           <div class="p2-body">
-            <b>MCP Gateway</b> — every agent as a native MCP tool (6 tools) over stdio + HTTP/SSE, from one
+            <b>MCP Gateway</b> — every agent as a native MCP tool (3 tools) over stdio + HTTP/SSE, from one
             endpoint. <a class="p2-link" href="./docs/mcp-gateway.html">Read the docs →</a>
           </div>
         </div>
@@ -530,7 +415,7 @@ textarea.tm-in{resize:vertical;min-height:46px;}
         <div class="p2-item">
           <span class="p2-check">✓</span>
           <div class="p2-body">
-            <b>Webhook push notifications</b> — register a <code>callback_url</code> on a Pipeline run and
+            <b>Webhook push notifications</b> — register a <code>callback_url</code> on a Shield request and
             the final result is POSTed back when it completes, signed with HMAC-SHA256. No more polling required.
           </div>
         </div>
@@ -539,7 +424,7 @@ textarea.tm-in{resize:vertical;min-height:46px;}
 
     <div class="panel-foot">
       Any agent with a wallet can call Distill services directly — no accounts, no
-      subscriptions, no API keys. Compose them into pipelines, settle per call in USDC
+      subscriptions, no API keys. Compose them into workflows, settle per call in USDC
       on Base, and earn verifiable on-chain reputation as you go.
     </div>
   </div>

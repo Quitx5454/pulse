@@ -1,6 +1,6 @@
 # MCP Gateway
 
-One unified [Model Context Protocol](https://modelcontextprotocol.io) server that exposes all five Distill agents as native tools. Point any MCP client — Claude Desktop, Daydreams, or your own — at one endpoint and get every Distill agent as a callable tool.
+One unified [Model Context Protocol](https://modelcontextprotocol.io) server that exposes all three Distill agents as native tools. Point any MCP client — Claude Desktop, Daydreams, or your own — at one endpoint and get every Distill agent as a callable tool.
 
 **Endpoint:** `POST https://mcp-gateway-production-e02e.up.railway.app/mcp`
 **Health:** `GET https://mcp-gateway-production-e02e.up.railway.app/` (free)
@@ -22,16 +22,13 @@ Desktop server (stdio) and as a remote HTTP service.
 
 ---
 
-## The 6 tools
+## The 3 tools
 
 | Tool | Agent | Method | Price | What it does |
 |------|-------|--------|-------|-------------|
 | `refine` | Refine | POST | 0.02 USDC | Clean raw transaction data, filter bots, return structured output |
-| `forge` | Forge | POST | 0.02 USDC | Compile an ERC-8004 reputation proof (keccak-256 hash + IPFS + giveFeedback calldata) |
 | `trace` | Trace | POST | 0.01 USDC | Normalize a raw execution log into structured steps + a `forge_ready` block |
 | `shield` | Shield | POST | 0.005 USDC | Strip PII from an x402 request + issue an HMAC-SHA256 replay guard |
-| `pipeline_invoke` | Pipeline | POST | 0.03 USDC | Chain any combination of the agents in one async call (returns a `task_id`) |
-| `pipeline_status` | Pipeline | GET | **free** | Poll a pipeline run's status and results by `task_id` |
 
 Each tool ships a strict, typed input schema mirroring the agent's documented input, so MCP clients
 (and the models driving them) know exactly how to call it.
@@ -59,7 +56,7 @@ Clone the repo, then add the gateway to your Claude Desktop config
 - `PRIVATE_KEY` is **optional** — see [Payment model](#payment-model). Without it, paid tools
   return the payment challenge for your client to settle.
 
-Restart Claude Desktop; the six Distill tools appear under the `distill` server.
+Restart Claude Desktop; the three Distill tools appear under the `distill` server.
 
 ---
 
@@ -92,9 +89,8 @@ Daydreams' [`@x402/mcp`](https://www.npmjs.com/package/@x402/mcp)) can connect t
 
 ## Payment model
 
-Five of the six tools are x402-protected. The gateway can pay automatically when configured with a
-wallet (`PRIVATE_KEY`), using the same EVM exact-scheme client (viem + `@x402/evm`) the Pipeline
-agent uses for its downstream payments.
+All three tools are x402-protected. The gateway can pay automatically when configured with a
+wallet (`PRIVATE_KEY`), using the EVM exact-scheme client (viem + `@x402/evm`).
 
 **A 402 is never swallowed.** If a payment can't be settled — no wallet configured, insufficient
 funds, or facilitator rejection — the gateway surfaces the x402 challenge as an MCP **tool error**
@@ -117,13 +113,13 @@ whose structured content carries the decoded `payment_required` payload. A payin
 | `PORT` | no | HTTP port (default 3000). |
 | `AGENT_TIMEOUT_MS` | no | Per-agent request timeout (default 60000). |
 | `MCP_TRANSPORT` | no | Set to `stdio` to force the stdio transport. |
-| `REFINE_URL` / `FORGE_URL` / `SHIELD_URL` / `PIPELINE_URL` | no | Override agent base URLs (default: production). |
+| `REFINE_URL` / `TRACE_URL` / `SHIELD_URL` | no | Override agent base URLs (default: production). `FORGE_URL` is still accepted as a fallback for `TRACE_URL`. |
 
 ---
 
 ## Seeding x402 Bazaar
 
-`scripts/seed-bazaar.ts` calls each of the five invoke endpoints once with realistic data, paying
+`scripts/seed-bazaar.ts` calls each of the three invoke endpoints once with realistic data, paying
 with a seeder wallet. A settled payment through the CDP facilitator is what triggers indexing into
 the x402 Bazaar catalog. It prints the on-chain settlement tx hash for each agent.
 
@@ -131,7 +127,7 @@ the x402 Bazaar catalog. It prints the on-chain settlement tx hash for each agen
 SEEDER_PRIVATE_KEY=0x... bun run seed
 ```
 
-> Costs real USDC on Base Mainnet (~0.085 USDC total). Run once.
+> Costs real USDC on Base Mainnet (~0.035 USDC total). Run once.
 
 ---
 
@@ -139,11 +135,9 @@ SEEDER_PRIVATE_KEY=0x... bun run seed
 
 | tool | cost |
 |------|------|
-| `refine` · `forge` | 0.02 USDC |
+| `refine` | 0.02 USDC |
 | `trace` | 0.01 USDC |
 | `shield` | 0.005 USDC |
-| `pipeline_invoke` | 0.03 USDC |
-| `pipeline_status` | **free** |
 
 The tool prices are exactly the underlying agents' prices — the gateway adds no markup.
 

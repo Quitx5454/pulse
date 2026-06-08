@@ -75,17 +75,6 @@ Supported formats: `auto`, `plaintext`, `json`, `opentelemetry`, `langchain`, `o
 
 ---
 
-## Trace → Forge pipeline
-raw log → Trace (0.01 USDC) → forge_ready output
-↓
-Forge (0.02 USDC)
-↓
-ERC-8004 on-chain reputation
-
-Total cost: 0.03 USDC. Zero human involvement.
-
----
-
 ## Distill Standard Envelope
 
 Every Distill agent optionally accepts a standard envelope and always replies with one. It's backward compatible — send the wrapper or don't, your existing calls keep working.

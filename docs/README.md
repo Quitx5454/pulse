@@ -14,9 +14,7 @@ Pay per call in USDC on Base.
 
 | Agent | What it does | Price |
 |-------|-------------|-------|
-| [Pipeline](./pipeline.html) | Chains any combination of the agents in one async call | 0.03 USDC |
 | [Refine](./refine.html) | Strips bot activity from raw on-chain transaction data | 0.02 USDC |
-| [Forge](./forge.html) | Compiles ERC-8004 reputation proofs | 0.02 USDC |
 | [Shield v2](./shield.html) | Sanitizes x402 payment metadata: strips PII, binds signatures, locks nonces, enforces spending policy | 0.005 USDC |
 | [Trace](./trace.html) | Structures agent execution logs into readable JSON | 0.01 USDC |
 
@@ -26,11 +24,11 @@ Pay per call in USDC on Base.
 
 | Layer | What it does | Price |
 |-------|-------------|-------|
-| [MCP Gateway](./mcp-gateway.html) | Exposes all 5 agents as native MCP tools (stdio + HTTP/SSE) | per-agent (no markup) |
+| [MCP Gateway](./mcp-gateway.html) | Exposes all 3 agents as native MCP tools (stdio + HTTP/SSE) | per-agent (no markup) |
 
 One [Model Context Protocol](https://modelcontextprotocol.io) endpoint that turns every Distill
-agent into a callable tool for Claude Desktop, Daydreams, and any MCP-compatible client. Six tools:
-`refine`, `forge`, `trace`, `shield`, `pipeline_invoke`, `pipeline_status`.
+agent into a callable tool for Claude Desktop, Daydreams, and any MCP-compatible client. Three tools:
+`refine`, `trace`, `shield`.
 
 ---
 
@@ -50,7 +48,7 @@ Payment token: USDC (0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913)
 
 ## Distill Standard Envelope
 
-Every Distill agent shares one request/response contract — the **Distill Standard Envelope** (`distill_version: "1.0"`). It gives multi-agent pipelines a uniform, session-tagged shape across Refine, Forge, Shield v2, and Trace.
+Every Distill agent shares one request/response contract — the **Distill Standard Envelope** (`distill_version: "1.0"`). It gives multi-agent workflows a uniform, session-tagged shape across Refine, Shield v2, and Trace.
 
 **Input is optional and backward compatible.** You may wrap your normal payload in an envelope, or send it bare:
 
@@ -78,7 +76,7 @@ If a `payload` field is present, the agent runs in **envelope mode** (it process
 }
 ```
 
-This means you can thread a `session_id` and `agent_id` through a whole pipeline (e.g. Trace → Forge) and correlate every step. See each agent's page for concrete examples.
+This means you can thread a `session_id` and `agent_id` through a multi-agent workflow and correlate every step. See each agent's page for concrete examples.
 
 ---
 
